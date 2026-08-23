@@ -1,5 +1,9 @@
 export { BusinessForm } from './BusinessForm'
 export { BusinessProvider } from './BusinessProvider'
+export { ProfilePage } from './ProfilePage'
+export { RecommendationsPage } from './RecommendationsPage'
+export { FeedbackPanel } from './FeedbackPanel'
+export { TeamAdminsCard } from './TeamAdminsCard'
 export { WizardArrowLeftIcon } from './BusinessWizardIcons'
 export {
   deleteBusinessAsset,
@@ -12,3 +16,6 @@ export {
 } from './api'
 export { ApiError, configureBusinessHttp, createBusinessHttp } from './http'
 export type { BusinessAsset, BusinessProfile, BusinessProfileUpdate } from './types'
+export type { ProfilePlanContext, ProfileUser, TeamAdmin } from './profileTypes'
+export type { AffiliateCatalog } from './affiliatesApi'
+export type { FeedbackProduct } from './feedbackApi'
