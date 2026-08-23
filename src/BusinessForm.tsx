@@ -48,7 +48,6 @@ import {
   WizardPuzzleIcon,
   WizardQuoteIcon,
   WizardReportIcon,
-  WizardSendIcon,
   WizardShareIcon,
   WizardUserCheckIcon,
   WizardUserIcon,
@@ -68,7 +67,7 @@ const STEPS = [
   { id: 3, label: 'Dirección', icon: WizardMapPinIcon },
   { id: 4, label: 'Redes sociales', icon: WizardShareIcon },
   { id: 5, label: 'Desafío', icon: WizardPuzzleIcon },
-  { id: 6, label: 'Revisar y enviar', icon: WizardCheckCircleIcon },
+  { id: 6, label: 'Revisar y guardar', icon: WizardCheckCircleIcon },
 ] as const
 
 function emptyToNull(value: string): string | null {
@@ -280,12 +279,8 @@ function Nav({
         onClick={onNext}
         className="inline-flex items-center gap-1.5 rounded-2xl bg-[var(--cta)] px-4 py-2.5 text-sm font-semibold text-[var(--cta-text)] disabled:opacity-60"
       >
-        <span className="hidden sm:inline">{nextLabel}</span>
-        {nextLabel === 'Siguiente' ? (
-          <WizardArrowRightIcon className="h-4 w-4" />
-        ) : (
-          <WizardSendIcon className="h-4 w-4" />
-        )}
+        <span className={nextLabel === 'Siguiente' ? 'hidden sm:inline' : undefined}>{nextLabel}</span>
+        {nextLabel === 'Siguiente' && <WizardArrowRightIcon className="h-4 w-4" />}
       </button>
     </div>
   )
@@ -778,7 +773,7 @@ function WizardFields({
       {step === 6 && (
         <div className="space-y-4">
           <div>
-            <h3 className="text-base font-semibold">Revisar y enviar</h3>
+            <h3 className="text-base font-semibold">Revisar y guardar</h3>
             <p className="mt-1 text-sm text-[var(--muted)]">
               Revisá los datos de mercado y guardá la configuración del equipo.
             </p>
@@ -903,9 +898,6 @@ function WizardFields({
         <p className="text-sm text-[var(--danger)]">
           {actionError instanceof ApiError ? actionError.message : 'No se pudo guardar el negocio.'}
         </p>
-      )}
-      {save.isSuccess && step === 6 && (
-        <p className="text-sm text-[var(--success)]">Negocio actualizado. Todas las apps lo usan.</p>
       )}
       </Panel>
     </>
