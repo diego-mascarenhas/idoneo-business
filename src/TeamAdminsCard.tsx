@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react'
 import { ApiError } from './http'
 import { Panel } from './Panel'
 import { PasswordField } from './PasswordField'
+import { SelectField } from './SelectField'
 import { createTeamAdmin, fetchTeamAdmins, removeTeamAdmin } from './teamApi'
 import type { TeamAdmin, TeamMemberRole } from './profileTypes'
 
@@ -162,17 +163,11 @@ export function TeamAdminsCard({
           </label>
           <label className="block text-sm sm:col-span-2">
             <span className="mb-1.5 block font-medium text-[var(--muted)]">Rol</span>
-            <select
+            <SelectField
               value={role}
-              onChange={(event) => setRole(event.target.value as TeamMemberRole)}
-              className={inputClass}
-            >
-              {BASIC_ROLES.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              onChange={(value) => setRole(value as TeamMemberRole)}
+              options={BASIC_ROLES}
+            />
             {fieldError(create.error, 'role') && (
               <p className="mt-1 text-xs text-[var(--danger)]">{fieldError(create.error, 'role')}</p>
             )}
