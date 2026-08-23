@@ -1,0 +1,146 @@
+
+.business-wizard__steps {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  gap: 0;
+  overflow-x: auto;
+  margin-bottom: 1.25rem;
+  padding: 0.15rem 0.25rem 0.35rem;
+}
+
+.business-wizard__step {
+  display: flex;
+  min-width: 5.25rem;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--muted);
+  transition: color 0.18s ease, transform 0.18s ease;
+}
+
+.business-wizard__step:hover {
+  color: var(--accent-strong);
+}
+
+.business-wizard__icon {
+  display: grid;
+  place-items: center;
+  color: inherit;
+}
+
+.business-wizard__icon svg {
+  width: 1.85rem;
+  height: 1.85rem;
+  stroke-width: 1.65;
+}
+
+.business-wizard__label {
+  max-width: 8.5rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.business-wizard__step.is-active {
+  color: var(--accent-strong);
+}
+
+.business-wizard__step.is-active .business-wizard__icon {
+  transform: scale(1.08);
+}
+
+.business-wizard__step.is-active .business-wizard__label {
+  font-weight: 650;
+}
+
+.business-wizard__step.is-done {
+  color: var(--accent);
+}
+
+.business-wizard__line {
+  flex: 0.55 1 1.25rem;
+  min-width: 0.7rem;
+  max-width: 3.25rem;
+  height: 2px;
+  margin-top: 0.9rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--border) 85%, var(--muted));
+  align-self: flex-start;
+}
+
+.business-wizard__line.is-done {
+  background: var(--accent);
+}
+
+.business-wizard__logo {
+  width: 120px;
+  height: 120px;
+  min-width: 120px;
+  min-height: 120px;
+}
+
+.business-wizard__loader {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: var(--chip);
+  padding: 2rem 1.25rem;
+  text-align: center;
+}
+
+.business-wizard__loader-core {
+  position: relative;
+  display: grid;
+  width: 5rem;
+  height: 5rem;
+  margin: 0 auto 1rem;
+  place-items: center;
+}
+
+.business-wizard__loader-core span {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  border-top-color: var(--accent);
+  animation: business-wizard-spin 1s linear infinite;
+}
+
+.business-wizard__loader-core span:nth-child(2) {
+  inset: 8px;
+  animation-duration: 1.4s;
+  animation-direction: reverse;
+  opacity: 0.7;
+}
+
+.business-wizard__loader-core span:nth-child(3) {
+  inset: 16px;
+  animation-duration: 1.8s;
+  opacity: 0.45;
+}
+
+@keyframes business-wizard-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.business-wizard__markdown h2,
+.business-wizard__markdown h3,
+.business-wizard__markdown h4 {
+  font-weight: 600;
+  margin: 0.75rem 0 0.35rem;
+}
+
+.business-wizard__markdown p {
+  margin: 0.4rem 0;
+}
+
+.business-wizard__markdown ul {
+  margin: 0.4rem 0 0.4rem 1.1rem;
+  list-style: disc;
+}
