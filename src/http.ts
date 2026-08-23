@@ -11,6 +11,10 @@ export class ApiError extends Error {
 }
 
 function messageFromBody(data: unknown, status: number): string {
+  if (status === 503 || isServiceUnavailable(data)) {
+    return 'Estamos realizando una tarea de mantenimiento, en breve volvemos!'
+  }
+
   if (typeof data === 'object' && data) {
     if ('errors' in data && data.errors && typeof data.errors === 'object') {
       const first = Object.values(data.errors as Record<string, unknown>)[0]
@@ -27,6 +31,19 @@ function messageFromBody(data: unknown, status: number): string {
   }
 
   return `Request failed (${status})`
+}
+
+function isServiceUnavailable(data: unknown): boolean {
+  if (typeof data === 'string') {
+    return /service unavailable/i.test(data)
+  }
+  if (typeof data === 'object' && data) {
+    const record = data as Record<string, unknown>
+    return [record.message, record.error].some(
+      (value) => typeof value === 'string' && /service unavailable/i.test(value),
+    )
+  }
+  return false
 }
 
 export type BusinessHttp = {
