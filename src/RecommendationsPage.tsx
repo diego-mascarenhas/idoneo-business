@@ -1,8 +1,9 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useId, useMemo, useState, type FormEvent } from 'react'
 import {
+  claimAffiliateReferral,
   fetchAffiliateDashboard,
   sendAffiliateInvitation,
   setupAffiliateStripe,
@@ -13,6 +14,7 @@ import {
 import { type FeedbackProduct } from './feedbackApi'
 import { FeedbackPanel } from './FeedbackPanel'
 import { ApiError } from './http'
+import { CardHeaderButton } from './CardHeaderButton'
 import { Panel } from './Panel'
 import { SelectField } from './SelectField'
 
@@ -222,6 +224,8 @@ export function RecommendationsPage({
                           >
                             Abrir enlace
                           </a>
+                        ) : data.referral_code ? (
+                          <span className="text-sm text-[var(--muted)]">Próximamente</span>
                         ) : (
                           <span className="text-sm text-[var(--muted)]">Activá el código</span>
                         )}
@@ -274,32 +278,51 @@ export function RecommendationsPage({
       </div>
 
       {data?.eligible && (
-        <ReferralsPanel data={data} />
+        <ReferralsPanel data={data} catalog={catalog} />
       )}
     </div>
   )
 }
 
-function ReferralsPanel({ data }: { data: AffiliateDashboard }) {
+function ReferralsPanel({
+  data,
+  catalog,
+}: {
+  data: AffiliateDashboard
+  catalog: AffiliateCatalog
+}) {
+  const queryClient = useQueryClient()
+  const [claimOpen, setClaimOpen] = useState(false)
   const referrals = referralsFromDashboard(data)
   const totals = Object.entries(data.totals_as_referrer)
 
   return (
     <Panel className="mt-6 space-y-4 p-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <h2 className="text-lg font-semibold">A quienes referí</h2>
           <p className="mt-1 text-sm text-[var(--muted)]">
             Apertura del email, si contrataron y tu comisión.
           </p>
+          {totals.length > 0 && (
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              Comisión {data.commission_percent}% ·{' '}
+              {totals.map(([currency, row]) => formatCents(row.commission_cents, currency)).join(' · ')}
+            </p>
+          )}
         </div>
-        {totals.length > 0 && (
-          <p className="text-sm text-[var(--muted)]">
-            Comisión {data.commission_percent}% ·{' '}
-            {totals.map(([currency, row]) => formatCents(row.commission_cents, currency)).join(' · ')}
-          </p>
-        )}
+        <CardHeaderButton disabled={!data.referral_code} onClick={() => setClaimOpen(true)}>
+          Incorporar
+        </CardHeaderButton>
       </div>
+      <ClaimReferralModal
+        open={claimOpen}
+        onClose={() => setClaimOpen(false)}
+        onClaimed={async () => {
+          setClaimOpen(false)
+          await queryClient.invalidateQueries({ queryKey: ['affiliates', 'dashboard', catalog] })
+        }}
+      />
 
       <div className="overflow-x-auto rounded-2xl border border-[var(--border)]">
         <table className="w-full min-w-[640px] text-left text-sm">
@@ -356,5 +379,124 @@ function ReferralsPanel({ data }: { data: AffiliateDashboard }) {
         </table>
       </div>
     </Panel>
+  )
+}
+
+function ClaimReferralModal({
+  open,
+  onClose,
+  onClaimed,
+}: {
+  open: boolean
+  onClose: () => void
+  onClaimed: () => void | Promise<void>
+}) {
+  const titleId = useId()
+  const [subscriptionCode, setSubscriptionCode] = useState('')
+  const [error, setError] = useState<string | null>(null)
+
+  const claim = useMutation({
+    mutationFn: () => claimAffiliateReferral(subscriptionCode.trim()),
+    onSuccess: async () => {
+      setSubscriptionCode('')
+      setError(null)
+      await onClaimed()
+    },
+    onError: (claimError) => {
+      setError(claimError instanceof ApiError ? claimError.message : 'No se pudo incorporar el cliente.')
+    },
+  })
+
+  useEffect(() => {
+    if (!open) {
+      setSubscriptionCode('')
+      setError(null)
+      return
+    }
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape' && !claim.isPending) {
+        onClose()
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open, claim.isPending, onClose])
+
+  function onSubmit(event: FormEvent) {
+    event.preventDefault()
+    setError(null)
+    claim.mutate()
+  }
+
+  if (!open) {
+    return null
+  }
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+      <button
+        type="button"
+        aria-label="Cerrar"
+        disabled={claim.isPending}
+        onClick={onClose}
+        className="absolute inset-0 bg-[var(--text)]/45"
+      />
+      <form
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onSubmit={onSubmit}
+        className="relative z-10 w-full max-w-md overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[var(--surface-solid)] shadow-[var(--shadow)]"
+      >
+        <div className="border-b border-[var(--border)] px-5 py-4">
+          <h2 id={titleId} className="text-lg font-semibold">
+            Incorporar cliente
+          </h2>
+          <p className="mt-1 text-sm text-[var(--muted)]">
+            Pedile el código de su plan y pegalo acá para sumarlo a tus recomendaciones.
+          </p>
+        </div>
+        <div className="space-y-3 px-5 py-4">
+          <label className="block text-sm" htmlFor="claim-subscription-code">
+            <span className="mb-1.5 block font-medium text-[var(--muted)]">Código de suscripción</span>
+            <input
+              id="claim-subscription-code"
+              value={subscriptionCode}
+              onChange={(event) => setSubscriptionCode(event.target.value)}
+              placeholder="sub_… o cus_…"
+              className={inputClass}
+              autoFocus
+              required
+            />
+          </label>
+          {error && <p className="text-sm text-[var(--accent-strong)]">{error}</p>}
+        </div>
+        <div className="flex justify-end gap-2 border-t border-[var(--border)] px-5 py-4">
+          <button
+            type="button"
+            disabled={claim.isPending}
+            onClick={onClose}
+            className="rounded-2xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold disabled:opacity-60"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={claim.isPending || subscriptionCode.trim() === ''}
+            className="rounded-2xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+          >
+            {claim.isPending ? 'Incorporando…' : 'Incorporar'}
+          </button>
+        </div>
+      </form>
+    </div>
   )
 }

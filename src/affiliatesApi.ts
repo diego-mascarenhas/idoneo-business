@@ -1,6 +1,13 @@
 import { getBusinessHttp } from './http'
 
-export type AffiliateCatalog = 'assistant' | 'platform' | 'mailer'
+export type AffiliateCatalog =
+  | 'assistant'
+  | 'platform'
+  | 'mailer'
+  | 'shop'
+  | 'ads'
+  | 'projects'
+  | 'affiliates'
 
 export type AffiliatePlan = {
   id: string
@@ -92,5 +99,18 @@ export async function sendAffiliateInvitation(payload: {
   return getBusinessHttp().request('/affiliates/invitations', {
     method: 'POST',
     body: payload,
+  })
+}
+
+type ClaimResponse = {
+  success: boolean
+  message: string
+  data: AffiliateReferral
+}
+
+export async function claimAffiliateReferral(subscriptionCode: string): Promise<ClaimResponse> {
+  return getBusinessHttp().request('/affiliates/claim', {
+    method: 'POST',
+    body: { subscription_code: subscriptionCode },
   })
 }
