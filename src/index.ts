@@ -3,6 +3,7 @@ export { BusinessProvider } from './BusinessProvider'
 export { ProfilePage } from './ProfilePage'
 export { RecommendationsPage } from './RecommendationsPage'
 export { FeedbackPanel } from './FeedbackPanel'
+export { CardHeaderButton } from './CardHeaderButton'
 export { TeamAdminsCard } from './TeamAdminsCard'
 export { WizardArrowLeftIcon } from './BusinessWizardIcons'
 export {

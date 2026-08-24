@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { ApiError } from './http'
+import { CardHeaderButton } from './CardHeaderButton'
 import { Panel } from './Panel'
 import { PasswordField } from './PasswordField'
 import { SelectField } from './SelectField'
@@ -117,16 +118,14 @@ export function TeamAdminsCard({
           <p className="mt-1 text-sm text-[var(--muted)]">{description}</p>
         </div>
         {!adding && (
-          <button
-            type="button"
+          <CardHeaderButton
             onClick={() => {
               create.reset()
               setAdding(true)
             }}
-            className="shrink-0 rounded-2xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-white"
           >
             Agregar usuario
-          </button>
+          </CardHeaderButton>
         )}
       </div>
 
