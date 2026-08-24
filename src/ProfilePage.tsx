@@ -224,7 +224,9 @@ export function ProfilePage({
         </Panel>
 
         {canManageTeam && (
-          <BillingForm className="space-y-4 p-6" fallbackName={name} fallbackPhone={user?.phone} />
+          <div id="datos-facturacion">
+            <BillingForm className="space-y-4 p-6" fallbackName={name} fallbackPhone={user?.phone} />
+          </div>
         )}
       </div>
     </div>

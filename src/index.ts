@@ -5,6 +5,8 @@ export { RecommendationsPage } from './RecommendationsPage'
 export { FeedbackPanel } from './FeedbackPanel'
 export { CardHeaderButton } from './CardHeaderButton'
 export { TeamAdminsCard } from './TeamAdminsCard'
+export { TrialBanner, remainingTrialLabel } from './TrialBanner'
+export type { TrialAccess } from './TrialBanner'
 export { WizardArrowLeftIcon } from './BusinessWizardIcons'
 export {
   deleteBusinessAsset,

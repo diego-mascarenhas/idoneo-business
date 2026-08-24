@@ -8,6 +8,7 @@ export type AffiliateCatalog =
   | 'ads'
   | 'projects'
   | 'affiliates'
+  | 'estimator'
 
 export type AffiliatePlan = {
   id: string

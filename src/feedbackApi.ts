@@ -1,7 +1,7 @@
 import { getBusinessHttp } from './http'
 import type { FeedbackQuestionKey } from './feedbackQuestions'
 
-export type FeedbackProduct = 'ads' | 'mailer' | 'shop' | 'assistant' | 'projects' | 'affiliates'
+export type FeedbackProduct = 'ads' | 'mailer' | 'shop' | 'assistant' | 'projects' | 'affiliates' | 'estimator'
 
 export type FeedbackAnswer = {
   key: FeedbackQuestionKey

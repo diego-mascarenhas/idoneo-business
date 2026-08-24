@@ -163,7 +163,7 @@ export function BillingForm({
   })
 
   return (
-    <Panel className={className}>
+    <Panel id="datos-facturacion" className={className}>
       <div>
         <h2 className="text-lg font-semibold">Datos de facturación</h2>
         <p className="mt-1 text-sm text-[var(--muted)]">
