@@ -4,7 +4,7 @@ export type ProfileUser = {
   email: string
   phone?: string | null
   profile_photo_url?: string | null
-  role?: string
+  role?: string | null
   current_team?: { id: number; name: string } | null
 }
 

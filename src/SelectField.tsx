@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 
 const triggerClass =
-  'flex w-full items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] px-3.5 py-2.5 text-left outline-none focus:ring-2 focus:ring-[var(--accent)]'
+  'flex min-h-[2.75rem] w-full items-center justify-between gap-2 rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] px-3.5 py-2.5 text-left text-[var(--text)] outline-none transition focus:ring-2 focus:ring-[var(--accent)]'
 
 export function SelectField({
   value,
@@ -49,7 +49,7 @@ export function SelectField({
   }, [open])
 
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className="relative w-full">
       {required && (
         <input
           tabIndex={-1}
@@ -67,7 +67,7 @@ export function SelectField({
         onClick={() => setOpen((current) => !current)}
         className={triggerClass}
       >
-        <span className={selected ? 'text-[var(--text)]' : 'text-[var(--muted)]'}>
+        <span className={['min-w-0 truncate', selected ? 'text-[var(--text)]' : 'text-[var(--muted)]'].join(' ')}>
           {selected?.label ?? placeholder}
         </span>
         <svg
@@ -90,7 +90,7 @@ export function SelectField({
         <ul
           id={listId}
           role="listbox"
-          className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-solid)] p-1 shadow-[var(--shadow)]"
+          className="absolute z-50 mt-2 max-h-60 w-full overflow-auto rounded-2xl border border-[var(--border)] bg-[var(--surface-solid)] p-1 shadow-[var(--shadow)]"
         >
           {options.map((option) => {
             const active = option.value === value
