@@ -13,6 +13,7 @@ import {
 } from './api'
 import { ApiError } from './http'
 import { Panel } from './Panel'
+import { SelectField } from './SelectField'
 import type { BusinessAsset, BusinessProfile, BusinessProfileUpdate } from './types'
 import {
   WizardAlertIcon,
@@ -606,24 +607,26 @@ function WizardFields({
               />
             </Field>
             <Field label="País" icon={<WizardWorldIcon className="h-4 w-4" />}>
-              <select className={inputClass} value={country} onChange={(event) => setCountry(event.target.value)}>
-                <option value="">Seleccionar país</option>
-                {(profile.countries ?? []).map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
+              <SelectField
+                value={country}
+                onChange={setCountry}
+                placeholder="Seleccionar país"
+                options={(profile.countries ?? []).map((item) => ({
+                  value: item,
+                  label: item,
+                }))}
+              />
             </Field>
             <Field label="Idioma" icon={<WizardLanguageIcon className="h-4 w-4" />}>
-              <select className={inputClass} value={language} onChange={(event) => setLanguage(event.target.value)}>
-                <option value="">Seleccionar idioma</option>
-                {LANGUAGES.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
+              <SelectField
+                value={language}
+                onChange={setLanguage}
+                placeholder="Seleccionar idioma"
+                options={LANGUAGES.map((item) => ({
+                  value: item,
+                  label: item,
+                }))}
+              />
             </Field>
           </div>
           <Nav step={2} onPrev={() => void persistAndGo(1)} onNext={() => void persistAndGo(3)} />

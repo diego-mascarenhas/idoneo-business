@@ -20,7 +20,7 @@ export function ProfilePage({
   canManageTeam,
   applyProfile,
   refreshUser,
-  showPhone = true,
+  showPhone = false,
   extraPersonal,
   subtitle,
   title = 'Mi perfil',
