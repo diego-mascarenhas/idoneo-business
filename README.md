@@ -9,7 +9,7 @@ Shared React package for the Idoneo Next.js apps. It holds the screens and API c
 - **Growth** — `RecommendationsPage` (affiliate invites) and `FeedbackPanel`
 - **HTTP** — `configureBusinessHttp`, `createBusinessHttp`, and `ApiError`
 
-Apps install it from GitHub `main` and talk to the same Humano / CMS8 API (Sanctum, team context).
+Apps install a **semver tag** from GitHub (not floating `main`) and talk to the same Humano / CMS8 API (Sanctum, team context).
 
 ## Built by IDONEO
 
@@ -24,7 +24,7 @@ These tools help companies **scale operations** and **innovate with structure**:
 Peer dependencies: React 19+ and TanStack Query 5.
 
 ```sh
-npm install git+https://github.com/diego-mascarenhas/idoneo-business.git#main
+npm install git+https://github.com/diego-mascarenhas/idoneo-business.git#semver:^0.2.0
 ```
 
 ```ts
@@ -32,7 +32,14 @@ import { BusinessForm, ProfilePage, RecommendationsPage } from 'idoneo-business'
 import 'idoneo-business/styles.css'
 ```
 
-Point `package.json` at `#main`. After merging this repo, refresh the lockfile in each app (`npm update idoneo-business`) so production installs the current commit.
+Point `package.json` at `#semver:^0.2.0`. After a release, bump the version here, merge to `main`, and tag it:
+
+```sh
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+Then refresh each app with `npm update idoneo-business` so the lockfile picks the new tag.
 
 For local work, symlink the package from a sibling folder:
 
