@@ -48,6 +48,15 @@ export type TeamAdmin = {
   email: string
   role?: string | null
   roles?: string[]
+  is_owner?: boolean
+}
+
+export type TeamAdminUpdateInput = {
+  name: string
+  email: string
+  role?: TeamMemberRole
+  password?: string
+  password_confirmation?: string
 }
 
 export type TeamMemberRole = 'admin' | 'collaborator'

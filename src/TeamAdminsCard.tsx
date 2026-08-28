@@ -7,7 +7,13 @@ import { CardHeaderButton } from './CardHeaderButton'
 import { Panel } from './Panel'
 import { PasswordField } from './PasswordField'
 import { SelectField } from './SelectField'
-import { createTeamAdmin, fetchTeamAdmins, removeTeamAdmin } from './teamApi'
+import {
+  createTeamAdmin,
+  fetchTeamAdmins,
+  removeTeamAdmin,
+  sendTeamAdminPasswordReset,
+  updateTeamAdmin,
+} from './teamApi'
 import type { TeamAdmin, TeamMemberRole } from './profileTypes'
 
 const BASIC_ROLES: Array<{ value: TeamMemberRole; label: string }> = [
@@ -17,6 +23,10 @@ const BASIC_ROLES: Array<{ value: TeamMemberRole; label: string }> = [
 
 const inputClass =
   'w-full rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[var(--accent)]'
+const rowButtonClass =
+  'rounded-2xl border border-[var(--border)] px-3 py-1.5 text-sm font-medium disabled:opacity-60'
+const secondaryButtonClass =
+  'rounded-2xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold disabled:opacity-60'
 
 function fieldError(error: unknown, field: string): string | undefined {
   if (!(error instanceof ApiError) || !error.body || typeof error.body !== 'object') {
@@ -61,6 +71,13 @@ export function TeamAdminsCard({
   const [role, setRole] = useState<TeamMemberRole>('collaborator')
   const [password, setPassword] = useState('')
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
+  const [editingUser, setEditingUser] = useState<TeamAdmin | null>(null)
+  const [editName, setEditName] = useState('')
+  const [editEmail, setEditEmail] = useState('')
+  const [editRole, setEditRole] = useState<TeamMemberRole>('collaborator')
+  const [editPassword, setEditPassword] = useState('')
+  const [editPasswordConfirmation, setEditPasswordConfirmation] = useState('')
+  const [actionMessage, setActionMessage] = useState<string | null>(null)
 
   const usersQuery = useQuery({
     queryKey: ['team-admins', listQuery],
@@ -82,6 +99,10 @@ export function TeamAdminsCard({
     },
   })
 
+  function memberRole(member: TeamAdmin): TeamMemberRole {
+    return accessLabel(member) === 'Colaborador' ? 'collaborator' : 'admin'
+  }
+
   function closeForm() {
     setAdding(false)
     setName('')
@@ -94,9 +115,60 @@ export function TeamAdminsCard({
   const remove = useMutation({
     mutationFn: (id: number) => removeTeamAdmin(id),
     onSuccess: async () => {
+      setActionMessage(null)
       await queryClient.invalidateQueries({ queryKey: ['team-admins'] })
     },
   })
+
+  const saveEdit = useMutation({
+    mutationFn: () => {
+      if (!editingUser) {
+        throw new Error('Elegí un usuario.')
+      }
+      return updateTeamAdmin(editingUser.id, {
+        name: editName.trim(),
+        email: editEmail.trim(),
+        ...(editingUser.is_owner ? {} : { role: editRole }),
+        ...(editPassword
+          ? { password: editPassword, password_confirmation: editPasswordConfirmation }
+          : {}),
+      })
+    },
+    onSuccess: async (res) => {
+      setActionMessage(res.message || 'Usuario actualizado.')
+      closeEdit()
+      await queryClient.invalidateQueries({ queryKey: ['team-admins'] })
+    },
+  })
+
+  const sendReset = useMutation({
+    mutationFn: (id: number) => sendTeamAdminPasswordReset(id),
+    onSuccess: (res) => {
+      setActionMessage(res.message || 'Enviamos el enlace de restauración.')
+    },
+  })
+
+  function openEdit(member: TeamAdmin) {
+    setActionMessage(null)
+    setAdding(false)
+    setEditingUser(member)
+    setEditName(member.name)
+    setEditEmail(member.email)
+    setEditRole(memberRole(member))
+    setEditPassword('')
+    setEditPasswordConfirmation('')
+    saveEdit.reset()
+  }
+
+  function closeEdit() {
+    setEditingUser(null)
+    setEditName('')
+    setEditEmail('')
+    setEditRole('collaborator')
+    setEditPassword('')
+    setEditPasswordConfirmation('')
+    saveEdit.reset()
+  }
 
   const rows = useMemo(() => {
     const users = usersQuery.data ?? []
@@ -117,10 +189,11 @@ export function TeamAdminsCard({
           <h2 className="text-lg font-semibold">{title}</h2>
           <p className="mt-1 text-sm text-[var(--muted)]">{description}</p>
         </div>
-        {!adding && (
+        {!adding && !editingUser && (
           <CardHeaderButton
             onClick={() => {
               create.reset()
+              closeEdit()
               setAdding(true)
             }}
           >
@@ -199,7 +272,7 @@ export function TeamAdminsCard({
                   create.reset()
                   closeForm()
                 }}
-                className="text-sm text-[var(--muted)] underline"
+                className={`${secondaryButtonClass} text-[var(--muted)]`}
               >
                 Cancelar
               </button>
@@ -261,18 +334,27 @@ export function TeamAdminsCard({
                       <td className="px-3.5 py-2.5 text-[var(--muted)]">{accessLabel(admin)}</td>
                       <td className="px-3.5 py-2.5 text-[var(--muted)]">{admin.email}</td>
                       <td className="px-3.5 py-2.5 text-right">
-                        {currentUserId === admin.id ? (
-                          <span className="text-xs text-[var(--muted)]">Vos</span>
-                        ) : (
+                        <div className="flex flex-wrap items-center justify-end gap-2">
                           <button
                             type="button"
-                            disabled={remove.isPending}
-                            onClick={() => remove.mutate(admin.id)}
-                            className="text-sm text-[var(--danger)] hover:underline disabled:opacity-60"
+                            onClick={() => openEdit(admin)}
+                            className={rowButtonClass}
                           >
-                            Quitar
+                            Editar
                           </button>
-                        )}
+                          {currentUserId === admin.id ? (
+                            <span className="px-3 py-1.5 text-sm text-[var(--muted)]">Vos</span>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={remove.isPending}
+                              onClick={() => remove.mutate(admin.id)}
+                              className={`${rowButtonClass} text-[var(--danger)]`}
+                            >
+                              Quitar
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -280,6 +362,111 @@ export function TeamAdminsCard({
               </tbody>
             </table>
           </div>
+        )}
+
+        {editingUser && (
+          <form
+            className="grid gap-3 rounded-2xl border border-[var(--border)] p-4 sm:grid-cols-2"
+            onSubmit={(event) => {
+              event.preventDefault()
+              saveEdit.mutate()
+            }}
+          >
+            <p className="sm:col-span-2 text-sm text-[var(--muted)]">
+              Editando a <span className="font-medium text-[var(--text)]">{editingUser.name}</span>
+            </p>
+            <label className="block text-sm">
+              <span className="mb-1.5 block font-medium text-[var(--muted)]">Nombre</span>
+              <input
+                value={editName}
+                onChange={(event) => setEditName(event.target.value)}
+                className={inputClass}
+              />
+              {fieldError(saveEdit.error, 'name') && (
+                <p className="mt-1 text-xs text-[var(--danger)]">{fieldError(saveEdit.error, 'name')}</p>
+              )}
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1.5 block font-medium text-[var(--muted)]">Email</span>
+              <input
+                type="email"
+                value={editEmail}
+                onChange={(event) => setEditEmail(event.target.value)}
+                className={inputClass}
+              />
+              {fieldError(saveEdit.error, 'email') && (
+                <p className="mt-1 text-xs text-[var(--danger)]">{fieldError(saveEdit.error, 'email')}</p>
+              )}
+            </label>
+            {!editingUser.is_owner && (
+              <label className="block text-sm sm:col-span-2">
+                <span className="mb-1.5 block font-medium text-[var(--muted)]">Rol</span>
+                <SelectField
+                  value={editRole}
+                  onChange={(value) => setEditRole(value as TeamMemberRole)}
+                  options={BASIC_ROLES}
+                />
+                {fieldError(saveEdit.error, 'role') && (
+                  <p className="mt-1 text-xs text-[var(--danger)]">{fieldError(saveEdit.error, 'role')}</p>
+                )}
+              </label>
+            )}
+            <PasswordField
+              label="Nueva contraseña (opcional)"
+              value={editPassword}
+              onChange={setEditPassword}
+              autoComplete="new-password"
+              error={fieldError(saveEdit.error, 'password')}
+            />
+            <PasswordField
+              label="Confirmar contraseña"
+              value={editPasswordConfirmation}
+              onChange={setEditPasswordConfirmation}
+              autoComplete="new-password"
+            />
+            <div className="sm:col-span-2 flex flex-wrap items-center gap-3">
+              <button
+                type="submit"
+                disabled={saveEdit.isPending}
+                className="rounded-2xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+              >
+                {saveEdit.isPending ? 'Guardando…' : 'Guardar cambios'}
+              </button>
+              <button
+                type="button"
+                disabled={sendReset.isPending}
+                onClick={() => sendReset.mutate(editingUser.id)}
+                className={secondaryButtonClass}
+              >
+                {sendReset.isPending ? 'Enviando…' : 'Enviar enlace de acceso'}
+              </button>
+              <button type="button" onClick={closeEdit} className={`${secondaryButtonClass} text-[var(--muted)]`}>
+                Cancelar
+              </button>
+            </div>
+            {saveEdit.isError &&
+              !fieldError(saveEdit.error, 'name') &&
+              !fieldError(saveEdit.error, 'email') &&
+              !fieldError(saveEdit.error, 'password') && (
+                <p className="sm:col-span-2 text-sm text-[var(--danger)]">
+                  {saveEdit.error instanceof ApiError
+                    ? saveEdit.error.message
+                    : saveEdit.error instanceof Error
+                      ? saveEdit.error.message
+                      : 'No se pudo actualizar el usuario.'}
+                </p>
+              )}
+          </form>
+        )}
+
+        {actionMessage && <p className="text-sm text-[var(--accent-strong)]">{actionMessage}</p>}
+
+        {sendReset.isError && (
+          <p className="text-sm text-[var(--danger)]">
+            {sendReset.error instanceof ApiError
+              ? sendReset.error.message
+              : 'No se pudo enviar el enlace.'}
+          </p>
         )}
 
         {remove.isError && (

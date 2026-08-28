@@ -2,7 +2,9 @@
 
 import { Panel } from './Panel'
 import { formatCompact, formatCost, formatTokens, formatUsagePeriod } from './usageFormat'
-import type { UsageByModel, UsageLine, WhatsAppLineUsage } from './usageTypes'
+import type { UsageByModel, UsageLine, UsageSource, WhatsAppLineUsage } from './usageTypes'
+
+const SOURCE_COLORS = ['#1f5c45', '#d4a017', '#5d8a74', '#c06c4a', '#6b8cae', '#8e6bb0']
 
 function formatWhen(value: string | null): string {
   if (!value) return '—'
@@ -22,20 +24,55 @@ function modelLabel(model: string): string {
 
 export function UsageBoard({ data }: { data: WhatsAppLineUsage }) {
   const period = formatUsagePeriod(data.period_start, data.period_end) ?? 'Período actual'
+  const all = data.all
+  const sources = data.sources ?? []
+  const totalTokens = all?.tokens ?? data.totals.total_tokens
+  const totalCost = all?.amount_cents ?? data.totals.amount_cents
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-        <Kpi label="Líneas" value={formatTokens(data.totals.lines)} delay={1} />
-        <Kpi label="Respuestas" value={formatTokens(data.totals.replies)} delay={2} />
-        <Kpi label="Tokens" value={formatCompact(data.totals.total_tokens)} delay={3} />
+        <Kpi label="Tokens" value={formatCompact(totalTokens)} delay={1} />
         <Kpi
           label="Costo"
-          value={formatCost(data.totals.amount_cents, data.currency)}
-          hint={formatCompact(data.totals.total_tokens)}
-          delay={3}
+          value={formatCost(totalCost, data.currency)}
+          hint={formatCompact(totalTokens)}
+          delay={2}
         />
+        <Kpi label="Llamadas" value={formatTokens(all?.calls ?? 0)} delay={3} />
+        <Kpi label="WhatsApp" value={formatTokens(data.totals.replies)} hint="respuestas" delay={4} />
       </div>
+
+      <Panel className="overflow-hidden p-0 rise-in-delay-1">
+        <div className="flex items-baseline justify-between gap-3 px-4 py-3">
+          <h2 className="font-display text-base font-semibold">Por origen</h2>
+          <p className="text-xs text-[var(--muted)]">{period}</p>
+        </div>
+        {sources.length === 0 ? (
+          <p className="px-4 pb-4 text-sm text-[var(--muted)]">
+            Todavía no hay consumo de OCR, Insights, Chat ni otras APIs.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left text-sm">
+              <thead className="border-y border-[var(--border)] text-[11px] uppercase tracking-wide text-[var(--muted)]">
+                <tr>
+                  <th className="px-4 py-2 font-medium">Origen</th>
+                  <th className="px-4 py-2 text-right font-medium">Llamadas</th>
+                  <th className="px-4 py-2 text-right font-medium">Tokens</th>
+                  <th className="px-4 py-2 text-right font-medium">Costo</th>
+                  <th className="px-4 py-2 text-right font-medium">Ahorro</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sources.map((source, index) => (
+                  <SourceRow key={source.module_name} source={source} currency={data.currency} color={SOURCE_COLORS[index % SOURCE_COLORS.length]} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Panel>
 
       {data.by_model.length > 0 && (
         <Panel className="p-4 rise-in-delay-1">
@@ -53,7 +90,12 @@ export function UsageBoard({ data }: { data: WhatsAppLineUsage }) {
 
       <Panel className="overflow-hidden p-0 rise-in-delay-2">
         <div className="flex items-baseline justify-between gap-3 px-4 py-3">
-          <h2 className="font-display text-base font-semibold">Por línea</h2>
+          <div>
+            <h2 className="font-display text-base font-semibold">WhatsApp por contacto</h2>
+            <p className="mt-0.5 text-xs text-[var(--muted)]">
+              Respuestas del asistente por contacto. No incluye OCR ni Insights.
+            </p>
+          </div>
           <p className="text-xs text-[var(--muted)]">{period}</p>
         </div>
         {data.lines.length === 0 ? (
@@ -113,6 +155,33 @@ function Kpi({
         ) : null}
       </p>
     </div>
+  )
+}
+
+function SourceRow({
+  source,
+  currency,
+  color,
+}: {
+  source: UsageSource
+  currency: string
+  color: string
+}) {
+  return (
+    <tr className="border-b border-[var(--border)] last:border-b-0">
+      <td className="px-4 py-2.5">
+        <span className="inline-flex items-center gap-2 font-medium">
+          <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: color }} />
+          {source.module_name}
+        </span>
+      </td>
+      <td className="px-4 py-2.5 text-right tabular-nums">{formatTokens(source.count)}</td>
+      <td className="px-4 py-2.5 text-right tabular-nums font-medium">{formatCompact(source.tokens_used)}</td>
+      <td className="px-4 py-2.5 text-right tabular-nums">{formatCost(source.amount_cents, currency)}</td>
+      <td className="px-4 py-2.5 text-right tabular-nums text-[var(--success)]">
+        {(source.saved_cents ?? 0) > 0 ? formatCost(source.saved_cents ?? 0, currency) : '—'}
+      </td>
+    </tr>
   )
 }
 

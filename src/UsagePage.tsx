@@ -16,7 +16,8 @@ export function UsagePage({ teamId }: { teamId?: number | string | null }) {
       <div className="mb-5">
         <h1 className="font-display text-2xl font-semibold leading-none">Consumo</h1>
         <p className="mt-1.5 text-sm text-[var(--muted)]">
-          Tokens, costo y modelo por línea de WhatsApp
+          Todo el consumo de IA del período: los mismos orígenes que el donut de Perfil, más el detalle
+          por contacto de WhatsApp
         </p>
       </div>
 

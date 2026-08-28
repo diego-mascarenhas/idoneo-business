@@ -81,7 +81,7 @@ export function TokenUsagePanel({
     by_module: [],
     amount_due_cents: 0,
     currency: 'EUR',
-    rate_per_million: 9,
+    rate_per_million: 15,
   }
   const messagesSent = whatsapp?.messages_sent ?? 0
   const modules = slicesWithTokens(tokenUsage.by_module)

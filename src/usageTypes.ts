@@ -60,6 +60,23 @@ export type UsageByModel = {
   saved_cents?: number
 }
 
+export type UsageSource = {
+  module_name: string
+  count: number
+  tokens_used: number
+  tokens_saved?: number
+  amount_cents: number
+  saved_cents?: number
+}
+
+export type UsageAll = {
+  calls: number
+  tokens: number
+  tokens_saved?: number
+  amount_cents: number
+  saved_cents?: number
+}
+
 export type WhatsAppLineUsage = {
   period_days: number
   period_start: string
@@ -77,6 +94,8 @@ export type WhatsAppLineUsage = {
     amount_cents: number
     saved_cents?: number
   }
+  all?: UsageAll
+  sources?: UsageSource[]
   by_model: UsageByModel[]
   lines: UsageLine[]
 }
