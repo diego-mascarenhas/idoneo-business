@@ -17,7 +17,7 @@ export function UsagePage({ teamId }: { teamId?: number | string | null }) {
         <h1 className="font-display text-2xl font-semibold leading-none">Consumo</h1>
         <p className="mt-1.5 text-sm text-[var(--muted)]">
           Todo el consumo de IA del período: los mismos orígenes que el donut de Perfil, más el detalle
-          por contacto de WhatsApp
+          por contacto.
         </p>
       </div>
 
