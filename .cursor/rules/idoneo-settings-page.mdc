@@ -1,0 +1,29 @@
+---
+description: Idoneo UserMenu opens app settings at /settings, never a modal
+globs: src/components/UserMenu.tsx, src/app/(app)/settings/**
+alwaysApply: true
+---
+
+# Configuración in Idoneo apps
+
+App-specific settings belong on a **`/settings` page**, same pattern as Assistant and Ads.
+
+- **UserMenu** (team managers only): `Link` to `/settings` labeled **Configuración** with `SettingsIcon`.
+- Do **not** add a one-off menu item (e.g. Remitente) that opens a modal.
+- Banners and “configure here” links go to `/settings`, not `openModal()`.
+- Protect the route: if the user cannot manage the team, redirect to `/profile`.
+
+```tsx
+// ✅ DO
+<Link role="menuitem" href="/settings" onClick={() => setOpen(false)}>
+  <SettingsIcon className="h-4 w-4 text-[var(--muted)]" />
+  Configuración
+</Link>
+
+// ❌ DON'T
+<button type="button" onClick={() => { setOpen(false); openSenderConfig() }}>
+  Remitente
+</button>
+```
+
+The settings page title is **Configuración**. Put product settings there (Mailer sender, Ads connections, Assistant prompts, etc.). Profile and Negocio stay on `/profile` and `/business`.

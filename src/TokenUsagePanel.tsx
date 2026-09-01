@@ -67,10 +67,14 @@ export function TokenUsagePanel({
   usage,
   whatsapp,
   helpHref,
+  messagesLabel = 'Mensajes',
+  description = 'IA, MCP de IDONEO y mensajes enviados. Se facturan aparte del plan.',
 }: {
   usage?: TokenUsage
   whatsapp?: WhatsAppUsage
   helpHref?: string
+  messagesLabel?: string
+  description?: string
 }) {
   const tokenUsage = usage ?? {
     total_calls: 0,
@@ -97,21 +101,19 @@ export function TokenUsagePanel({
     <div className="border-t border-[var(--border)] pt-4 md:border-l md:border-t-0 md:pl-6 md:pt-0">
       <div>
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold">Uso de API y Tokens + Ahorro</h3>
+          <h3 className="text-sm font-semibold">Uso de API y Tokens</h3>
           {helpHref ? (
             <a
               href={helpHref}
               className="rounded-full p-1 text-[var(--muted)] transition hover:bg-[var(--chip)] hover:text-[var(--cta-strong)]"
-              aria-label="Cómo se cobran la IA, el MCP de IDONEO y WhatsApp"
+              aria-label="Cómo se cobran la IA, el MCP de IDONEO y los mensajes"
               title="Cómo se cobra"
             >
               <InfoIcon className="h-4 w-4" />
             </a>
           ) : null}
         </div>
-        <p className="mt-0.5 text-xs text-[var(--muted)]">
-          IA, MCP de IDONEO y mensajes enviados. Se facturan aparte del plan.
-        </p>
+        <p className="mt-0.5 text-xs text-[var(--muted)]">{description}</p>
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-2">
@@ -120,7 +122,7 @@ export function TokenUsagePanel({
           <p className="text-sm font-semibold">{formatCompact(tokenUsage.total_calls)}</p>
         </div>
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-center">
-          <p className="text-[11px] text-[var(--muted)]">Mensajes</p>
+          <p className="text-[11px] text-[var(--muted)]">{messagesLabel}</p>
           <p className="text-sm font-semibold">{formatCompact(messagesSent)}</p>
         </div>
       </div>

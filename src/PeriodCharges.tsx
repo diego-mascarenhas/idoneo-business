@@ -41,7 +41,7 @@ export function PeriodCharges({
         {formatCompact(usage?.total_tokens_used ?? 0)} tokens
       </p>
       <p className="mt-0.5 text-[11px] text-[var(--muted)]">
-        WhatsApp + IA y MCP de IDONEO, aparte del plan
+        Mensajes + IA y MCP de IDONEO, aparte del plan
       </p>
     </div>
   )

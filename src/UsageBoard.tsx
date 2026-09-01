@@ -40,7 +40,7 @@ export function UsageBoard({ data }: { data: WhatsAppLineUsage }) {
           delay={2}
         />
         <Kpi label="Llamadas" value={formatTokens(all?.calls ?? 0)} delay={3} />
-        <Kpi label="WhatsApp" value={formatTokens(data.totals.replies)} hint="respuestas" delay={4} />
+        <Kpi label="Mensajes" value={formatTokens(data.totals.replies)} hint="enviados" delay={4} />
       </div>
 
       <Panel className="overflow-hidden p-0 rise-in-delay-1">
@@ -61,7 +61,6 @@ export function UsageBoard({ data }: { data: WhatsAppLineUsage }) {
                   <th className="px-4 py-2 text-right font-medium">Llamadas</th>
                   <th className="px-4 py-2 text-right font-medium">Tokens</th>
                   <th className="px-4 py-2 text-right font-medium">Costo</th>
-                  <th className="px-4 py-2 text-right font-medium">Ahorro</th>
                 </tr>
               </thead>
               <tbody>
@@ -91,7 +90,7 @@ export function UsageBoard({ data }: { data: WhatsAppLineUsage }) {
       <Panel className="overflow-hidden p-0 rise-in-delay-2">
         <div className="flex items-baseline justify-between gap-3 px-4 py-3">
           <div>
-            <h2 className="font-display text-base font-semibold">WhatsApp por contacto</h2>
+            <h2 className="font-display text-base font-semibold">Mensajes por contacto</h2>
             <p className="mt-0.5 text-xs text-[var(--muted)]">
               Respuestas del asistente por contacto. No incluye OCR ni Insights.
             </p>
@@ -100,7 +99,7 @@ export function UsageBoard({ data }: { data: WhatsAppLineUsage }) {
         </div>
         {data.lines.length === 0 ? (
           <p className="px-4 pb-4 text-sm text-[var(--muted)]">
-            Todavía no hay consumo de tokens en WhatsApp.
+            Todavía no hay consumo de tokens en mensajes.
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -113,7 +112,6 @@ export function UsageBoard({ data }: { data: WhatsAppLineUsage }) {
                   <th className="px-4 py-2 text-right font-medium">Out</th>
                   <th className="px-4 py-2 text-right font-medium">Total</th>
                   <th className="px-4 py-2 text-right font-medium">Costo</th>
-                  <th className="px-4 py-2 text-right font-medium">Ahorro</th>
                   <th className="px-4 py-2 text-right font-medium">Última</th>
                 </tr>
               </thead>
@@ -178,9 +176,6 @@ function SourceRow({
       <td className="px-4 py-2.5 text-right tabular-nums">{formatTokens(source.count)}</td>
       <td className="px-4 py-2.5 text-right tabular-nums font-medium">{formatCompact(source.tokens_used)}</td>
       <td className="px-4 py-2.5 text-right tabular-nums">{formatCost(source.amount_cents, currency)}</td>
-      <td className="px-4 py-2.5 text-right tabular-nums text-[var(--success)]">
-        {(source.saved_cents ?? 0) > 0 ? formatCost(source.saved_cents ?? 0, currency) : '—'}
-      </td>
     </tr>
   )
 }
@@ -191,7 +186,6 @@ function ModelRow({ row, currency }: { row: UsageByModel; currency: string }) {
       <p className="min-w-0 truncate font-medium">{modelLabel(row.model)}</p>
       <p className="shrink-0 tabular-nums text-[var(--muted)]">
         {formatCompact(row.total_tokens)} · {formatCost(row.amount_cents, currency)}
-        {(row.saved_cents ?? 0) > 0 ? ` · −${formatCost(row.saved_cents ?? 0, currency)}` : ''}
       </p>
     </div>
   )
@@ -218,9 +212,6 @@ function LineRow({ line, currency }: { line: UsageLine; currency: string }) {
       <td className="px-4 py-2.5 text-right tabular-nums">{formatCompact(line.completion_tokens)}</td>
       <td className="px-4 py-2.5 text-right tabular-nums font-medium">{formatCompact(line.total_tokens)}</td>
       <td className="px-4 py-2.5 text-right tabular-nums">{formatCost(line.amount_cents, currency)}</td>
-      <td className="px-4 py-2.5 text-right tabular-nums text-[var(--success)]">
-        {(line.saved_cents ?? 0) > 0 ? formatCost(line.saved_cents ?? 0, currency) : '—'}
-      </td>
       <td className="px-4 py-2.5 text-right text-xs text-[var(--muted)]">{formatWhen(line.last_at)}</td>
     </tr>
   )
