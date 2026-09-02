@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { ApiError } from './http'
+import { fetchModelCatalog } from './modelCatalog'
 import { fetchWhatsAppLineUsage } from './usageApi'
 import { UsageBoard } from './UsageBoard'
 
@@ -9,6 +10,11 @@ export function UsagePage({ teamId }: { teamId?: number | string | null }) {
   const usageQuery = useQuery({
     queryKey: ['assistant-usage', teamId],
     queryFn: fetchWhatsAppLineUsage,
+  })
+  const catalogQuery = useQuery({
+    queryKey: ['model-catalog'],
+    queryFn: fetchModelCatalog,
+    staleTime: 60 * 60 * 1000,
   })
 
   return (
@@ -31,7 +37,7 @@ export function UsagePage({ teamId }: { teamId?: number | string | null }) {
         </p>
       )}
 
-      {usageQuery.data && <UsageBoard data={usageQuery.data} />}
+      {usageQuery.data && <UsageBoard data={usageQuery.data} catalog={catalogQuery.data ?? []} />}
     </div>
   )
 }
