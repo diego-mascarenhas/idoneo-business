@@ -81,6 +81,18 @@ export function UsageBoard({
                   <SourceRow key={source.module_name} source={source} currency={view.currency} color={SOURCE_COLORS[index % SOURCE_COLORS.length]} />
                 ))}
               </tbody>
+              <tfoot>
+                <tr className="border-t border-[var(--border)] text-sm">
+                  <th className="px-4 py-2.5 text-left font-semibold">Total</th>
+                  <th className="px-4 py-2.5 text-center font-semibold tabular-nums">
+                    {formatTokens(sources.reduce((sum, source) => sum + source.count, 0))}
+                  </th>
+                  <th className="px-4 py-2.5 text-right font-semibold tabular-nums">{formatCompact(billed.tokens)}</th>
+                  <th className="px-4 py-2.5 text-right font-semibold tabular-nums">
+                    {formatCost(billed.amount_cents, view.currency)}
+                  </th>
+                </tr>
+              </tfoot>
             </table>
           </div>
         )}
@@ -106,7 +118,6 @@ export function UsageBoard({
             {view.by_model.map((row) => (
               <ModelRow key={row.model} row={row} currency={view.currency} catalog={catalog} />
             ))}
-          </div>
         </Panel>
       )}
 

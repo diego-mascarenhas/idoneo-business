@@ -12,7 +12,7 @@ export function presentClientUsage(
   catalog: CatalogModel[],
 ): WhatsAppLineUsage {
   if (data.client_presented) {
-    return data
+    return withAlignedSources(data)
   }
 
   const multiplier = data.token_multiplier ?? DEFAULT_CLIENT_TOKEN_MULTIPLIER
@@ -55,7 +55,7 @@ export function presentClientUsage(
     },
   })
 
-  return {
+  return withAlignedSources({
     ...presented,
     all: {
       calls: data.all?.calls ?? 0,
@@ -64,27 +64,127 @@ export function presentClientUsage(
       amount_cents: billed.amount_cents,
       saved_cents: data.all?.saved_cents,
     },
-  }
+  })
 }
 
 export function billedUsageTotals(data: WhatsAppLineUsage): { tokens: number; amount_cents: number } {
+  const sources = alignSourcesWithModels(data.sources ?? [], data.by_model)
+  if (sources.length > 0) {
+    return {
+      tokens: sources.reduce((sum, source) => sum + source.tokens_used, 0),
+      amount_cents: sources.reduce((sum, source) => sum + source.amount_cents, 0),
+    }
+  }
+
   const modelTokens = data.by_model.reduce((sum, row) => sum + row.total_tokens, 0)
   const modelAmount = data.by_model.reduce((sum, row) => sum + row.amount_cents, 0)
-  const extra = (data.sources ?? []).filter((source) => !sourceCoveredByModels(source.module_name, data.by_model))
-  const extraTokens = extra.reduce((sum, source) => sum + source.tokens_used, 0)
-  const extraAmount = extra.reduce((sum, source) => sum + source.amount_cents, 0)
-
   if (modelTokens > 0 || modelAmount > 0) {
-    return {
-      tokens: modelTokens + extraTokens,
-      amount_cents: modelAmount + extraAmount,
-    }
+    return { tokens: modelTokens, amount_cents: modelAmount }
   }
 
   return {
     tokens: data.all?.tokens ?? data.totals.total_tokens,
     amount_cents: data.all?.amount_cents ?? data.totals.amount_cents,
   }
+}
+
+export function alignSourcesWithModels(sources: UsageSource[], models: UsageByModel[]): UsageSource[] {
+  const groups: Record<SourceBucket, { tokens: number; amount: number; saved: number; replies: number }> = {
+    chat: { tokens: 0, amount: 0, saved: 0, replies: 0 },
+    ocr: { tokens: 0, amount: 0, saved: 0, replies: 0 },
+    whisper: { tokens: 0, amount: 0, saved: 0, replies: 0 },
+  }
+
+  for (const row of models) {
+    const bucket = modelSourceBucket(row.model)
+    groups[bucket].tokens += row.total_tokens
+    groups[bucket].amount += row.amount_cents
+    groups[bucket].saved += row.tokens_saved ?? 0
+    groups[bucket].replies += row.replies
+  }
+
+  const seen = new Set<SourceBucket>()
+  const aligned = sources.map((source) => {
+    const key = sourceBucket(source.module_name)
+    if (key && groups[key].tokens > 0) {
+      seen.add(key)
+      return {
+        ...source,
+        tokens_used: groups[key].tokens,
+        amount_cents: groups[key].amount,
+        tokens_saved: groups[key].saved,
+      }
+    }
+    if (key) {
+      seen.add(key)
+    }
+    return source
+  })
+
+  const labels: Record<SourceBucket, string> = { chat: 'Chat', ocr: 'OCR', whisper: 'Whisper' }
+  for (const key of Object.keys(labels) as SourceBucket[]) {
+    if (groups[key].tokens > 0 && !seen.has(key)) {
+      aligned.push({
+        module_name: labels[key],
+        count: groups[key].replies,
+        tokens_used: groups[key].tokens,
+        tokens_saved: groups[key].saved,
+        amount_cents: groups[key].amount,
+      })
+    }
+  }
+
+  return aligned.sort((left, right) => right.tokens_used - left.tokens_used)
+}
+
+function withAlignedSources(data: WhatsAppLineUsage): WhatsAppLineUsage {
+  const sources = alignSourcesWithModels(data.sources ?? [], data.by_model)
+  const billed = sources.length > 0
+    ? {
+        tokens: sources.reduce((sum, source) => sum + source.tokens_used, 0),
+        amount_cents: sources.reduce((sum, source) => sum + source.amount_cents, 0),
+      }
+    : billedUsageTotals({ ...data, sources })
+
+  return {
+    ...data,
+    sources,
+    all: {
+      calls: data.all?.calls ?? 0,
+      tokens: billed.tokens,
+      tokens_saved: data.all?.tokens_saved,
+      amount_cents: billed.amount_cents,
+      saved_cents: data.all?.saved_cents,
+    },
+  }
+}
+
+type SourceBucket = 'chat' | 'ocr' | 'whisper'
+
+function sourceBucket(moduleName: string): SourceBucket | null {
+  const name = moduleName.trim().toLowerCase()
+  if (name === 'chat' || name.includes('chat')) {
+    return 'chat'
+  }
+  if (name === 'ocr' || name.includes('ocr')) {
+    return 'ocr'
+  }
+  if (name === 'whisper' || name.includes('whisper') || name.includes('audio')) {
+    return 'whisper'
+  }
+
+  return null
+}
+
+function modelSourceBucket(model: string): SourceBucket {
+  if (isOcrModel(model)) {
+    return 'ocr'
+  }
+  if (model.toLowerCase().includes('whisper')) {
+    return 'whisper'
+  }
+
+  return 'chat'
 }
 
 export function sourceCoveredByModels(moduleName: string, models: UsageByModel[]): boolean {
