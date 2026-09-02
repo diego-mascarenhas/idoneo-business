@@ -1,7 +1,7 @@
 import { catalogCostCents, matchCatalogModel, type CatalogModel } from './modelCatalog.ts'
 import type { UsageByModel, UsageLine, UsageSource, WhatsAppLineUsage } from './usageTypes.ts'
 
-export const DEFAULT_CLIENT_TOKEN_MULTIPLIER = 8
+export const DEFAULT_CLIENT_TOKEN_MULTIPLIER = 10
 
 export function scaleClientTokens(value: number, multiplier = DEFAULT_CLIENT_TOKEN_MULTIPLIER): number {
   return Math.round(Math.max(0, value) * Math.max(1, multiplier))
