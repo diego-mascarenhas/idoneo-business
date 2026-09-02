@@ -118,6 +118,7 @@ export function UsageBoard({
             {view.by_model.map((row) => (
               <ModelRow key={row.model} row={row} currency={view.currency} catalog={catalog} />
             ))}
+          </div>
         </Panel>
       )}
 
