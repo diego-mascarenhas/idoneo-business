@@ -1,5 +1,5 @@
-import { catalogCostCents, matchCatalogModel, type CatalogModel } from './modelCatalog.ts'
-import type { UsageByModel, UsageLine, UsageSource, WhatsAppLineUsage } from './usageTypes.ts'
+import { catalogCostCents, matchCatalogModel, type CatalogModel } from './modelCatalog'
+import type { UsageByModel, UsageLine, UsageSource, WhatsAppLineUsage } from './usageTypes'
 
 export const DEFAULT_CLIENT_TOKEN_MULTIPLIER = 10
 
