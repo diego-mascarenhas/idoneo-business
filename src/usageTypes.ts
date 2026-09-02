@@ -54,6 +54,8 @@ export type UsageLine = {
 export type UsageByModel = {
   model: string
   replies: number
+  prompt_tokens?: number
+  completion_tokens?: number
   total_tokens: number
   tokens_saved?: number
   amount_cents: number
@@ -81,7 +83,11 @@ export type WhatsAppLineUsage = {
   period_days: number
   period_start: string
   period_end: string
-  rate_per_million: number
+  rate_per_million?: number
+  markup_percent?: number
+  token_multiplier?: number
+  usd_to_display?: number
+  client_presented?: boolean
   currency: string
   default_model: string
   totals: {
@@ -98,4 +104,10 @@ export type WhatsAppLineUsage = {
   sources?: UsageSource[]
   by_model: UsageByModel[]
   lines: UsageLine[]
+  whatsapp?: {
+    messages_sent: number
+    our_amount_cents: number
+    our_rate: number
+    currency: string
+  }
 }

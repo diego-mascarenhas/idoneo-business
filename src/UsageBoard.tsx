@@ -1,5 +1,13 @@
 'use client'
 
+import { billedUsageTotals, presentClientUsage } from './clientUsage'
+import {
+  catalogModelHref,
+  catalogRateLabel,
+  matchCatalogModel,
+  MODEL_CATALOG_PAGE,
+  type CatalogModel,
+} from './modelCatalog'
 import { Panel } from './Panel'
 import { formatCompact, formatCost, formatTokens, formatUsagePeriod } from './usageFormat'
 import type { UsageByModel, UsageLine, UsageSource, WhatsAppLineUsage } from './usageTypes'
@@ -22,25 +30,30 @@ function modelLabel(model: string): string {
   return model === 'cheapest' ? 'Automático' : model
 }
 
-export function UsageBoard({ data }: { data: WhatsAppLineUsage }) {
-  const period = formatUsagePeriod(data.period_start, data.period_end) ?? 'Período actual'
-  const all = data.all
-  const sources = data.sources ?? []
-  const totalTokens = all?.tokens ?? data.totals.total_tokens
-  const totalCost = all?.amount_cents ?? data.totals.amount_cents
+export function UsageBoard({
+  data,
+  catalog = [],
+}: {
+  data: WhatsAppLineUsage
+  catalog?: CatalogModel[]
+}) {
+  const view = presentClientUsage(data, catalog)
+  const period = formatUsagePeriod(view.period_start, view.period_end) ?? 'Período actual'
+  const sources = view.sources ?? []
+  const billed = billedUsageTotals(view)
+  const messages = view.whatsapp
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-        <Kpi label="Tokens" value={formatCompact(totalTokens)} delay={1} />
+        <Kpi label="Tokens" value={formatCompact(billed.tokens)} delay={1} />
+        <Kpi label="Tokens · valor" value={formatCost(billed.amount_cents, view.currency)} delay={2} />
+        <Kpi label="Mensajes" value={formatTokens(messages?.messages_sent ?? view.totals.replies)} delay={3} />
         <Kpi
-          label="Costo"
-          value={formatCost(totalCost, data.currency)}
-          hint={formatCompact(totalTokens)}
-          delay={2}
+          label="Mensajes · valor"
+          value={formatCost(messages?.our_amount_cents ?? 0, messages?.currency ?? view.currency)}
+          delay={4}
         />
-        <Kpi label="Llamadas" value={formatTokens(all?.calls ?? 0)} delay={3} />
-        <Kpi label="Mensajes" value={formatTokens(data.totals.replies)} hint="enviados" delay={4} />
       </div>
 
       <Panel className="overflow-hidden p-0 rise-in-delay-1">
@@ -58,14 +71,14 @@ export function UsageBoard({ data }: { data: WhatsAppLineUsage }) {
               <thead className="border-y border-[var(--border)] text-[11px] uppercase tracking-wide text-[var(--muted)]">
                 <tr>
                   <th className="px-4 py-2 font-medium">Origen</th>
-                  <th className="px-4 py-2 text-right font-medium">Llamadas</th>
+                  <th className="px-4 py-2 text-center font-medium">Llamadas</th>
                   <th className="px-4 py-2 text-right font-medium">Tokens</th>
-                  <th className="px-4 py-2 text-right font-medium">Costo</th>
+                  <th className="px-4 py-2 text-right font-medium">Valor</th>
                 </tr>
               </thead>
               <tbody>
                 {sources.map((source, index) => (
-                  <SourceRow key={source.module_name} source={source} currency={data.currency} color={SOURCE_COLORS[index % SOURCE_COLORS.length]} />
+                  <SourceRow key={source.module_name} source={source} currency={view.currency} color={SOURCE_COLORS[index % SOURCE_COLORS.length]} />
                 ))}
               </tbody>
             </table>
@@ -73,15 +86,25 @@ export function UsageBoard({ data }: { data: WhatsAppLineUsage }) {
         )}
       </Panel>
 
-      {data.by_model.length > 0 && (
+      {view.by_model.length > 0 && (
         <Panel className="p-4 rise-in-delay-1">
           <div className="mb-3 flex items-baseline justify-between gap-3">
-            <h2 className="font-display text-base font-semibold">Modelos</h2>
+            <div className="flex min-w-0 items-baseline gap-2">
+              <h2 className="font-display text-base font-semibold">Modelos</h2>
+              <a
+                href={MODEL_CATALOG_PAGE}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex shrink-0 items-center rounded-full border border-[var(--border)] bg-[var(--chip)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--cta-strong)] no-underline transition hover:border-[var(--cta-strong)]"
+              >
+                Todos
+              </a>
+            </div>
             <p className="text-xs text-[var(--muted)]">{period}</p>
           </div>
           <div className="space-y-2">
-            {data.by_model.map((row) => (
-              <ModelRow key={row.model} row={row} currency={data.currency} />
+            {view.by_model.map((row) => (
+              <ModelRow key={row.model} row={row} currency={view.currency} catalog={catalog} />
             ))}
           </div>
         </Panel>
@@ -97,7 +120,7 @@ export function UsageBoard({ data }: { data: WhatsAppLineUsage }) {
           </div>
           <p className="text-xs text-[var(--muted)]">{period}</p>
         </div>
-        {data.lines.length === 0 ? (
+        {view.lines.length === 0 ? (
           <p className="px-4 pb-4 text-sm text-[var(--muted)]">
             Todavía no hay consumo de tokens en mensajes.
           </p>
@@ -111,13 +134,13 @@ export function UsageBoard({ data }: { data: WhatsAppLineUsage }) {
                   <th className="px-4 py-2 text-right font-medium">In</th>
                   <th className="px-4 py-2 text-right font-medium">Out</th>
                   <th className="px-4 py-2 text-right font-medium">Total</th>
-                  <th className="px-4 py-2 text-right font-medium">Costo</th>
+                  <th className="px-4 py-2 text-right font-medium">Valor</th>
                   <th className="px-4 py-2 text-right font-medium">Última</th>
                 </tr>
               </thead>
               <tbody>
-                {data.lines.map((line) => (
-                  <LineRow key={line.phone} line={line} currency={data.currency} />
+                {view.lines.map((line) => (
+                  <LineRow key={line.phone} line={line} currency={view.currency} catalog={catalog} />
                 ))}
               </tbody>
             </table>
@@ -173,17 +196,40 @@ function SourceRow({
           {source.module_name}
         </span>
       </td>
-      <td className="px-4 py-2.5 text-right tabular-nums">{formatTokens(source.count)}</td>
+      <td className="px-4 py-2.5 text-center tabular-nums">{formatTokens(source.count)}</td>
       <td className="px-4 py-2.5 text-right tabular-nums font-medium">{formatCompact(source.tokens_used)}</td>
       <td className="px-4 py-2.5 text-right tabular-nums">{formatCost(source.amount_cents, currency)}</td>
     </tr>
   )
 }
 
-function ModelRow({ row, currency }: { row: UsageByModel; currency: string }) {
+function ModelRow({
+  row,
+  currency,
+  catalog,
+}: {
+  row: UsageByModel
+  currency: string
+  catalog: CatalogModel[]
+}) {
+  const match = matchCatalogModel(row.model, catalog)
+  const rates = catalogRateLabel(match)
+  const label = match?.name ?? modelLabel(row.model)
+
   return (
     <div className="flex items-center justify-between gap-3 text-sm">
-      <p className="min-w-0 truncate font-medium">{modelLabel(row.model)}</p>
+      <a
+        href={catalogModelHref(row.model, match)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="min-w-0 no-underline hover:underline"
+        title={row.model !== label ? row.model : undefined}
+      >
+        <p className="min-w-0 truncate font-medium text-[var(--cta-strong)]">{label}</p>
+        {rates ? (
+          <p className="mt-0.5 truncate text-[11px] text-[var(--muted)]">{rates} · millón</p>
+        ) : null}
+      </a>
       <p className="shrink-0 tabular-nums text-[var(--muted)]">
         {formatCompact(row.total_tokens)} · {formatCost(row.amount_cents, currency)}
       </p>
@@ -191,7 +237,15 @@ function ModelRow({ row, currency }: { row: UsageByModel; currency: string }) {
   )
 }
 
-function LineRow({ line, currency }: { line: UsageLine; currency: string }) {
+function LineRow({
+  line,
+  currency,
+  catalog,
+}: {
+  line: UsageLine
+  currency: string
+  catalog: CatalogModel[]
+}) {
   return (
     <tr className="border-b border-[var(--border)] last:border-b-0">
       <td className="px-4 py-2.5">
@@ -203,10 +257,16 @@ function LineRow({ line, currency }: { line: UsageLine; currency: string }) {
         </p>
       </td>
       <td className="px-4 py-2.5">
-        <p className="font-mono text-xs">{modelLabel(line.model)}</p>
-        {line.models.length > 1 && (
-          <p className="text-[11px] text-[var(--muted)]">{line.models.slice(1).map(modelLabel).join(' · ')}</p>
-        )}
+        <div className="flex flex-col gap-0.5">
+          {(line.models.length > 0 ? line.models : [line.model]).map((model, index) => (
+            <p
+              key={model}
+              className={index === 0 ? 'text-xs' : 'text-[11px] text-[var(--muted)]'}
+            >
+              <ModelCatalogLink model={model} catalog={catalog} />
+            </p>
+          ))}
+        </div>
       </td>
       <td className="px-4 py-2.5 text-right tabular-nums">{formatCompact(line.prompt_tokens)}</td>
       <td className="px-4 py-2.5 text-right tabular-nums">{formatCompact(line.completion_tokens)}</td>
@@ -214,5 +274,22 @@ function LineRow({ line, currency }: { line: UsageLine; currency: string }) {
       <td className="px-4 py-2.5 text-right tabular-nums">{formatCost(line.amount_cents, currency)}</td>
       <td className="px-4 py-2.5 text-right text-xs text-[var(--muted)]">{formatWhen(line.last_at)}</td>
     </tr>
+  )
+}
+
+function ModelCatalogLink({ model, catalog }: { model: string; catalog: CatalogModel[] }) {
+  const match = matchCatalogModel(model, catalog)
+  const label = match?.name ?? modelLabel(model)
+
+  return (
+    <a
+      href={catalogModelHref(model, match)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-[var(--cta-strong)] no-underline hover:underline"
+      title={model !== label ? model : undefined}
+    >
+      {label}
+    </a>
   )
 }
