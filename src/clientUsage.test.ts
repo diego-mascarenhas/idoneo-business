@@ -77,7 +77,8 @@ describe('client usage presentation', () => {
   it('doubles tokens so market rates match the billed amount', () => {
     const view = presentClientUsage(usageFixture(), [haiku])
 
-    assert.equal(scaleClientTokens(100_000), 200_000)
+    assert.equal(scaleClientTokens(100_000, 2), 200_000)
+    assert.equal(scaleClientTokens(100_000), 800_000)
     assert.equal(view.lines[0]?.total_tokens, 200_000)
     assert.equal(view.by_model[0]?.total_tokens, 200_000)
     assert.equal(view.sources?.[0]?.tokens_used, 200_000)
