@@ -129,4 +129,6 @@ export type WhatsAppLineUsage = {
     our_rate: number
     currency: string
   }
+  prospect?: ProspectUsage
+  storage?: StorageUsage
 }
