@@ -46,9 +46,9 @@ export function UsageBoard({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-        <Kpi label="Tokens" value={formatCompact(billed.tokens)} delay={1} />
+        <Kpi label="Prospección" value={formatCompact(view.prospect?.credits_used ?? 0)} delay={1} />
         <Kpi label="Tokens · valor" value={formatCost(billed.amount_cents, view.currency)} delay={2} />
-        <Kpi label="Mensajes" value={formatTokens(messages?.messages_sent ?? view.totals.replies)} delay={3} />
+        <Kpi label="Almacenamiento" value={view.storage?.formatted_size || '0 B'} delay={3} />
         <Kpi
           label="Mensajes · valor"
           value={formatCost(messages?.our_amount_cents ?? 0, messages?.currency ?? view.currency)}
@@ -99,8 +99,8 @@ export function UsageBoard({
       </Panel>
 
       {view.by_model.length > 0 && (
-        <Panel className="p-4 rise-in-delay-1">
-          <div className="mb-3 flex items-baseline justify-between gap-3">
+        <Panel className="overflow-hidden p-0 rise-in-delay-1">
+          <div className="flex items-baseline justify-between gap-3 px-4 py-3">
             <div className="flex min-w-0 items-baseline gap-2">
               <h2 className="font-display text-base font-semibold">Modelos</h2>
               <a
@@ -114,10 +114,35 @@ export function UsageBoard({
             </div>
             <p className="text-xs text-[var(--muted)]">{period}</p>
           </div>
-          <div className="space-y-2">
-            {view.by_model.map((row) => (
-              <ModelRow key={row.model} row={row} currency={view.currency} catalog={catalog} />
-            ))}
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left text-sm">
+              <thead className="border-y border-[var(--border)] text-[11px] uppercase tracking-wide text-[var(--muted)]">
+                <tr>
+                  <th className="px-4 py-2 font-medium">Modelo</th>
+                  <th className="px-4 py-2 text-right font-medium">Tokens</th>
+                  <th className="px-4 py-2 text-right font-medium">Valor</th>
+                </tr>
+              </thead>
+              <tbody>
+                {view.by_model.map((row) => (
+                  <ModelRow key={row.model} row={row} currency={view.currency} catalog={catalog} />
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-[var(--border)] text-sm">
+                  <th className="px-4 py-2.5 text-left font-semibold">Total</th>
+                  <th className="px-4 py-2.5 text-right font-semibold tabular-nums">
+                    {formatCompact(view.by_model.reduce((sum, row) => sum + row.total_tokens, 0))}
+                  </th>
+                  <th className="px-4 py-2.5 text-right font-semibold tabular-nums">
+                    {formatCost(
+                      view.by_model.reduce((sum, row) => sum + row.amount_cents, 0),
+                      view.currency,
+                    )}
+                  </th>
+                </tr>
+              </tfoot>
+            </table>
           </div>
         </Panel>
       )}
@@ -229,23 +254,22 @@ function ModelRow({
   const label = match?.name ?? modelLabel(row.model)
 
   return (
-    <div className="flex items-center justify-between gap-3 text-sm">
-      <a
-        href={catalogModelHref(row.model, match)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="min-w-0 no-underline hover:underline"
-        title={row.model !== label ? row.model : undefined}
-      >
-        <p className="min-w-0 truncate font-medium text-[var(--cta-strong)]">{label}</p>
-        {rates ? (
-          <p className="mt-0.5 truncate text-[11px] text-[var(--muted)]">{rates} · millón</p>
-        ) : null}
-      </a>
-      <p className="shrink-0 tabular-nums text-[var(--muted)]">
-        {formatCompact(row.total_tokens)} · {formatCost(row.amount_cents, currency)}
-      </p>
-    </div>
+    <tr className="border-b border-[var(--border)] last:border-b-0">
+      <td className="px-4 py-2.5">
+        <a
+          href={catalogModelHref(row.model, match)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="no-underline hover:underline"
+          title={row.model !== label ? row.model : undefined}
+        >
+          <p className="font-medium text-[var(--cta-strong)]">{label}</p>
+          {rates ? <p className="mt-0.5 text-[11px] text-[var(--muted)]">{rates} · millón</p> : null}
+        </a>
+      </td>
+      <td className="px-4 py-2.5 text-right tabular-nums font-medium">{formatCompact(row.total_tokens)}</td>
+      <td className="px-4 py-2.5 text-right tabular-nums">{formatCost(row.amount_cents, currency)}</td>
+    </tr>
   )
 }
 
