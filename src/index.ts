@@ -29,6 +29,8 @@ export type { ProfilePlanContext, ProfileUser, TeamAdmin } from './profileTypes'
 export type { AffiliateCatalog } from './affiliatesApi'
 export type { FeedbackProduct } from './feedbackApi'
 export type {
+  ProspectUsage,
+  StorageUsage,
   TokenUsage,
   TokenUsageModule,
   UsageByModel,

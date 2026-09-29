@@ -19,6 +19,25 @@ export type TokenUsage = {
   rate_per_million?: number
 }
 
+export type ProspectUsage = {
+  credits_used: number
+  amount_due_cents?: number
+  our_rate?: number
+  currency?: string
+  period_start?: string | null
+  period_end?: string | null
+}
+
+export type StorageUsage = {
+  bytes: number
+  formatted_size: string
+  amount_due_cents?: number
+  our_rate?: number
+  currency?: string
+  period_start?: string | null
+  period_end?: string | null
+}
+
 export type WhatsAppUsage = {
   messages_sent: number
   our_amount_cents?: number
