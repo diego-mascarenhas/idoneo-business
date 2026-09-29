@@ -1,6 +1,6 @@
 import { formatCompact } from './usageFormat'
 import { InfoIcon } from './InfoIcon'
-import type { TokenUsage, TokenUsageModule, WhatsAppUsage } from './usageTypes'
+import type { ProspectUsage, StorageUsage, TokenUsage, TokenUsageModule, WhatsAppUsage } from './usageTypes'
 
 const MODULE_COLORS = ['#1f5c45', '#d4a017', '#5d8a74', '#c06c4a', '#6b8cae', '#8e6bb0']
 
@@ -66,12 +66,16 @@ function Donut({ slices, used }: { slices: DonutSlice[]; used: number }) {
 export function TokenUsagePanel({
   usage,
   whatsapp,
+  prospect,
+  storage,
   helpHref,
   messagesLabel = 'Mensajes',
-  description = 'IA, MCP de IDONEO y mensajes enviados. Se facturan aparte del plan.',
+  description = 'IA, MCP de IDONEO, mensajes, prospección y almacenamiento. Se facturan aparte del plan.',
 }: {
   usage?: TokenUsage
   whatsapp?: WhatsAppUsage
+  prospect?: ProspectUsage
+  storage?: StorageUsage
   helpHref?: string
   messagesLabel?: string
   description?: string
@@ -124,6 +128,14 @@ export function TokenUsagePanel({
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-center">
           <p className="text-[11px] text-[var(--muted)]">{messagesLabel}</p>
           <p className="text-sm font-semibold">{formatCompact(messagesSent)}</p>
+        </div>
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-center">
+          <p className="text-[11px] text-[var(--muted)]">Prospección</p>
+          <p className="text-sm font-semibold">{formatCompact(prospect?.credits_used ?? 0)}</p>
+        </div>
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-center">
+          <p className="text-[11px] text-[var(--muted)]">Almacenamiento</p>
+          <p className="text-sm font-semibold">{storage?.formatted_size || '0 B'}</p>
         </div>
       </div>
 
