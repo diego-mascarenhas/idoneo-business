@@ -46,11 +46,19 @@ export function UsageBoard({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-        <Kpi label="Prospección" value={formatCompact(view.prospect?.credits_used ?? 0)} delay={1} />
-        <Kpi label="Tokens · valor" value={formatCost(billed.amount_cents, view.currency)} delay={2} />
-        <Kpi label="Almacenamiento" value={view.storage?.formatted_size || '0 B'} delay={3} />
         <Kpi
-          label="Mensajes · valor"
+          label="Prospección"
+          value={formatCost(view.prospect?.amount_due_cents ?? 0, view.prospect?.currency ?? view.currency)}
+          delay={1}
+        />
+        <Kpi label="Tokens" value={formatCost(billed.amount_cents, view.currency)} delay={2} />
+        <Kpi
+          label="Almacenamiento"
+          value={formatCost(view.storage?.amount_due_cents ?? 0, view.storage?.currency ?? view.currency)}
+          delay={3}
+        />
+        <Kpi
+          label="Mensajes"
           value={formatCost(messages?.our_amount_cents ?? 0, messages?.currency ?? view.currency)}
           delay={4}
         />

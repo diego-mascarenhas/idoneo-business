@@ -58,7 +58,7 @@ export type BusinessClientConfig = {
 }
 
 function normalizeBase(baseUrl?: string): string {
-  return (baseUrl ?? 'https://humano.test/api').replace(/\/$/, '')
+  return (baseUrl ?? 'https://cms8.test/api').replace(/\/$/, '')
 }
 
 async function parseBody(response: Response): Promise<unknown> {
