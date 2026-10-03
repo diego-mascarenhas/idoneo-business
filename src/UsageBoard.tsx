@@ -210,7 +210,7 @@ function Kpi({
   const delayClass = delay ? `rise-in-delay-${delay}` : ''
 
   return (
-    <div className={`stat-tile rise-in ${delayClass}`}>
+    <div className={`widget-solid rise-in px-4 py-3 ${delayClass}`}>
       <p className="truncate text-[11px] font-medium leading-none text-[var(--muted)]">{label}</p>
       <p className="mt-1.5 font-display text-[1.45rem] font-semibold tabular-nums leading-none">
         {value}
