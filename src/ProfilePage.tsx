@@ -3,6 +3,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useEffect, useState, type ReactNode } from 'react'
 import { BillingForm } from './BillingForm'
+import { WizardSaveIcon } from './BusinessWizardIcons'
 import { PasswordField } from './PasswordField'
 import { Panel } from './Panel'
 import { fetchBilling, updatePassword, updateProfile } from './profileApi'
@@ -199,8 +200,9 @@ export function ProfilePage({
             type="button"
             disabled={save.isPending}
             onClick={() => save.mutate()}
-            className="rounded-2xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-2xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
           >
+            <WizardSaveIcon className="h-4 w-4" />
             {save.isPending ? 'Guardando…' : 'Guardar perfil'}
           </button>
         </Panel>

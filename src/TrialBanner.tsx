@@ -62,10 +62,10 @@ export function TrialBanner({
   return (
     <a
       href={href}
-      className={`inline-flex max-w-full items-center gap-2 rounded-full border px-3 py-1.5 text-left text-xs font-medium leading-snug no-underline transition hover:bg-[var(--chip)] sm:text-sm ${colors}`}
+      className={`inline-flex w-max max-w-full items-center gap-2 overflow-hidden rounded-full border px-3 py-1.5 text-left text-xs font-medium leading-snug no-underline transition hover:bg-[var(--chip)] sm:text-sm ${colors}`}
     >
       <AlertIcon />
-      <span className="min-w-0">
+      <span className="min-w-0 truncate">
         {expired
           ? (expiredMessage ?? `La prueba de ${productName} terminó.`)
           : `Prueba ${productName}${trialLeft ? ` · ${trialLeft}` : ''}.`}{' '}

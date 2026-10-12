@@ -14,9 +14,67 @@ import {
 import { type FeedbackProduct } from './feedbackApi'
 import { FeedbackPanel } from './FeedbackPanel'
 import { ApiError } from './http'
+import { WizardArrowLeftIcon, WizardCheckCircleIcon, WizardSendIcon } from './BusinessWizardIcons'
 import { CardHeaderButton } from './CardHeaderButton'
 import { Panel } from './Panel'
 import { SelectField } from './SelectField'
+
+function CopyIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M7 7m0 2.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667z" />
+      <path d="M4.012 16.737a2 2 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" />
+    </svg>
+  )
+}
+
+function UserPlusIcon({ className = 'h-3.5 w-3.5' }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+      <path d="M16 19h6" />
+      <path d="M19 16v6" />
+      <path d="M6 21v-2a4 4 0 0 1 4 -4h4" />
+    </svg>
+  )
+}
+
+function FeedbackIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M8 9h8" />
+      <path d="M8 13h6" />
+      <path d="M3 7a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3z" />
+    </svg>
+  )
+}
 
 const inputClass =
   'w-full rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[var(--accent)]'
@@ -30,6 +88,111 @@ function formatCents(cents: number, currency: string): string {
   } catch {
     return `${(cents / 100).toFixed(2)} ${currency.toUpperCase()}`
   }
+}
+
+function formatActivity(value?: string | null): string {
+  if (!value) {
+    return '—'
+  }
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return '—'
+  }
+  const now = new Date()
+  const diff = date.getTime() - now.getTime()
+  if (diff > 0) {
+    return date.toLocaleString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  }
+  const ago = -diff
+  if (ago < 60 * 60 * 1000) {
+    return `Hace ${Math.max(1, Math.round(ago / 60000))} min`
+  }
+  if (date.toDateString() === now.toDateString()) {
+    return `Hoy, ${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`
+  }
+  const yesterday = new Date(now)
+  yesterday.setDate(now.getDate() - 1)
+  if (date.toDateString() === yesterday.toDateString()) {
+    return `Ayer, ${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`
+  }
+  return date.toLocaleString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+}
+
+function latestReferralActivity(referral: AffiliateReferral): {
+  label: string
+  at: string
+  tone: string
+  icon: 'sent' | 'opened' | 'clicked' | 'contracted'
+} | null {
+  const events = [
+    referral.sent_at
+      ? { label: 'Enviado', at: referral.sent_at, tone: 'text-[var(--warning)]', icon: 'sent' as const }
+      : null,
+    referral.opened_at
+      ? { label: 'Abierto', at: referral.opened_at, tone: 'text-[var(--accent-strong)]', icon: 'opened' as const }
+      : null,
+    referral.clicked_at
+      ? { label: 'Clic', at: referral.clicked_at, tone: 'text-[var(--cta)]', icon: 'clicked' as const }
+      : null,
+    referral.contracted_at
+      ? { label: '', at: referral.contracted_at, tone: 'text-[var(--accent-strong)]', icon: 'contracted' as const }
+      : null,
+  ].filter((event): event is NonNullable<typeof event> => event !== null)
+
+  if (events.length === 0) {
+    return null
+  }
+
+  return events.sort((left, right) => new Date(right.at).getTime() - new Date(left.at).getTime())[0]
+}
+
+function ActivityGlyph({ icon }: { icon: 'sent' | 'opened' | 'clicked' | 'contracted' }) {
+  const common = {
+    className: 'h-3.5 w-3.5',
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 2,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    'aria-hidden': true,
+  }
+
+  if (icon === 'opened') {
+    return (
+      <svg {...common}>
+        <path d="M2 12s3.5 -6 10 -6s10 6 10 6s-3.5 6 -10 6s-10 -6 -10 -6" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    )
+  }
+
+  if (icon === 'clicked') {
+    return (
+      <svg {...common}>
+        <path d="M8 13l-2 -2l8 -8l2 2" />
+        <path d="M14 6l2 2" />
+        <path d="M4 20l6 -6" />
+        <path d="M12 16l4 4" />
+      </svg>
+    )
+  }
+
+  if (icon === 'contracted') {
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M9 12l2 2l4 -4" />
+      </svg>
+    )
+  }
+
+  return (
+    <svg {...common}>
+      <path d="M10 14l11 -11" />
+      <path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5" />
+    </svg>
+  )
 }
 
 function formatDateTime(value?: string | null): string {
@@ -84,6 +247,7 @@ export function RecommendationsPage({
   const [invitePlan, setInvitePlan] = useState('')
   const [inviteMessage, setInviteMessage] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [showFeedback, setShowFeedback] = useState(false)
 
   const data = dashboardQuery.data
   const plans = data?.plans ?? []
@@ -132,13 +296,28 @@ export function RecommendationsPage({
   }
 
   return (
-    <div>
-      <h1 className="font-display text-3xl font-semibold">Mis recomendaciones</h1>
-      <p className="mt-1 text-[var(--muted)]">
-        Recomendá {productName} y dejá feedback sobre el producto.
-      </p>
+    <div className="max-w-3xl">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl font-semibold">Mis recomendaciones</h1>
+          <p className="mt-1 text-[var(--muted)]">Recomendá {productName}.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowFeedback((current) => !current)}
+          className="inline-flex items-center gap-2 rounded-2xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold"
+        >
+          {showFeedback ? <WizardArrowLeftIcon className="h-4 w-4" /> : <FeedbackIcon />}
+          {showFeedback ? 'Volver' : 'Feedback'}
+        </button>
+      </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+      {showFeedback ? (
+        <div className="mt-6">
+          <FeedbackPanel product={product} productName={productName} />
+        </div>
+      ) : (
+      <div className="mt-6">
         <Panel className="space-y-4 p-6">
           <div>
             <h2 className="text-lg font-semibold">Recomendá {productName}</h2>
@@ -177,8 +356,9 @@ export function RecommendationsPage({
                     <button
                       type="button"
                       onClick={() => void copyReferralCode()}
-                      className="rounded-2xl border border-[var(--border)] px-3 py-2 text-sm font-medium"
+                      className="inline-flex items-center gap-2 rounded-2xl border border-[var(--border)] px-3 py-2 text-sm font-medium"
                     >
+                      {copied ? <WizardCheckCircleIcon className="h-4 w-4" /> : <CopyIcon />}
                       {copied ? 'Copiado' : 'Copiar'}
                     </button>
                   </div>
@@ -264,8 +444,9 @@ export function RecommendationsPage({
                 <button
                   type="submit"
                   disabled={invite.isPending || !data.referral_code || plans.length === 0}
-                  className="rounded-2xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
                 >
+                  <WizardSendIcon className="h-4 w-4" />
                   {invite.isPending ? 'Enviando…' : 'Enviar invitación'}
                 </button>
                 {inviteMessage && <p className="text-sm text-[var(--accent-strong)]">{inviteMessage}</p>}
@@ -273,11 +454,10 @@ export function RecommendationsPage({
             </>
           )}
         </Panel>
-
-        <FeedbackPanel product={product} productName={productName} />
       </div>
+      )}
 
-      {data?.eligible && (
+      {!showFeedback && data?.eligible && (
         <ReferralsPanel data={data} catalog={catalog} />
       )}
     </div>
@@ -302,7 +482,7 @@ function ReferralsPanel({
         <div className="min-w-0">
           <h2 className="text-lg font-semibold">A quienes referí</h2>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Apertura del email, si contrataron y tu comisión.
+            La última actividad y tu comisión.
           </p>
           {totals.length > 0 && (
             <p className="mt-1 text-sm text-[var(--muted)]">
@@ -311,7 +491,8 @@ function ReferralsPanel({
             </p>
           )}
         </div>
-        <CardHeaderButton disabled={!data.referral_code} onClick={() => setClaimOpen(true)}>
+        <CardHeaderButton className="gap-1" disabled={!data.referral_code} onClick={() => setClaimOpen(true)}>
+          <UserPlusIcon />
           Incorporar
         </CardHeaderButton>
       </div>
@@ -324,50 +505,52 @@ function ReferralsPanel({
         }}
       />
 
-      <div className="overflow-x-auto rounded-2xl border border-[var(--border)]">
-        <table className="w-full min-w-[640px] text-left text-sm">
+      <div className="overflow-hidden rounded-2xl border border-[var(--border)]">
+        <table className="w-full text-left text-sm" style={{ tableLayout: 'fixed' }}>
           <thead className="bg-[var(--chip)] text-xs uppercase tracking-wide text-[var(--muted)]">
             <tr>
-              <th className="px-3.5 py-2.5 font-medium">Persona</th>
-              <th className="px-3.5 py-2.5 font-medium">Email abierto</th>
-              <th className="px-3.5 py-2.5 font-medium">Contrató</th>
-              <th className="px-3.5 py-2.5 font-medium text-right">Comisión</th>
+              <th className="px-3 py-2.5 font-medium" style={{ width: '34%' }}>Persona</th>
+              <th className="px-3 py-2.5 font-medium" style={{ width: '38%' }}>Actividad</th>
+              <th className="px-3 py-2.5 text-right font-medium" style={{ width: '28%' }}>Comisión</th>
             </tr>
           </thead>
           <tbody>
             {referrals.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-3.5 py-6 text-center text-[var(--muted)]">
+                <td colSpan={3} className="px-3 py-6 text-center text-[var(--muted)]">
                   Todavía no referiste a nadie. Enviá una invitación o compartí tu enlace.
                 </td>
               </tr>
             ) : (
               referrals.map((referral) => (
                 <tr key={referral.id} className="border-t border-[var(--border)]">
-                  <td className="px-3.5 py-2.5">
-                    <p className="font-medium">{referral.name}</p>
-                    <p className="text-xs text-[var(--muted)]">
+                  <td className="overflow-hidden px-3 py-2.5">
+                    <p className="truncate font-medium">{referral.name}</p>
+                    <p className="truncate text-xs text-[var(--muted)]">
                       {[referral.email, referral.plan_name].filter(Boolean).join(' · ')}
                     </p>
                   </td>
-                  <td className="px-3.5 py-2.5 text-[var(--muted)]">
-                    {referral.opened_at
-                      ? formatDateTime(referral.opened_at)
-                      : referral.sent_at
-                        ? 'Sin abrir'
-                        : '—'}
+                  <td className="overflow-hidden whitespace-nowrap px-3 py-2.5">
+                    {(() => {
+                      const activity = latestReferralActivity(referral)
+                      if (!activity) {
+                        return <span className="text-[var(--muted)]">—</span>
+                      }
+
+                      const when = activity.icon === 'contracted' ? formatDateTime(activity.at) : formatActivity(activity.at)
+
+                      return (
+                        <span className={['inline-flex max-w-full items-center gap-1.5 overflow-hidden text-xs', activity.tone].join(' ')}>
+                          <ActivityGlyph icon={activity.icon} />
+                          <span>
+                            {activity.label ? `${activity.label} · ` : ''}
+                            <span className={activity.label ? 'text-[var(--muted)]' : undefined}>{when}</span>
+                          </span>
+                        </span>
+                      )
+                    })()}
                   </td>
-                  <td className="px-3.5 py-2.5">
-                    {referral.contracted ? (
-                      <span className="text-[var(--accent-strong)]">
-                        Sí
-                        {referral.contracted_at ? ` · ${formatDateTime(referral.contracted_at)}` : ''}
-                      </span>
-                    ) : (
-                      <span className="text-[var(--muted)]">No</span>
-                    )}
-                  </td>
-                  <td className="px-3.5 py-2.5 text-right font-medium">
+                  <td className="overflow-hidden whitespace-nowrap px-3 py-2.5 text-right font-medium">
                     {referral.commission_cents > 0 && referral.currency
                       ? formatCents(referral.commission_cents, referral.currency)
                       : '—'}
