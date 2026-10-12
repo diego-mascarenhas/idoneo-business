@@ -59,6 +59,14 @@ export type TeamAdminUpdateInput = {
   password_confirmation?: string
 }
 
+export type UserTeam = {
+  id: number
+  name: string
+  is_owner: boolean
+  is_current: boolean
+  role: string | null
+}
+
 export type TeamMemberRole = 'admin' | 'collaborator'
 
 export type TeamAdminInput = {

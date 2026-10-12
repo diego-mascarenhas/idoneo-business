@@ -97,6 +97,16 @@ export function WizardArrowRightIcon({ className }: IconProps) {
   )
 }
 
+export function WizardSaveIcon({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+      <path d="M12 14a2 2 0 1 0 0 -4a2 2 0 0 0 0 4" />
+      <path d="M14 4v4h-6v-4" />
+    </Svg>
+  )
+}
+
 export function WizardSendIcon({ className }: IconProps) {
   return (
     <Svg className={className}>

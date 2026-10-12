@@ -1,5 +1,5 @@
 import { getBusinessHttp } from './http'
-import type { TeamAdmin, TeamAdminInput, TeamAdminUpdateInput } from './profileTypes'
+import type { ProfileUser, TeamAdmin, TeamAdminInput, TeamAdminUpdateInput, UserTeam } from './profileTypes'
 
 export async function fetchTeamAdmins(listQuery = 'assistant=1'): Promise<TeamAdmin[]> {
   const data = await getBusinessHttp().request<{ success: boolean; users: TeamAdmin[] }>(
@@ -37,6 +37,18 @@ export async function updateTeamAdminPassword(
   return getBusinessHttp().request(`/users/${id}/password`, {
     method: 'PUT',
     body: payload,
+  })
+}
+
+export async function fetchUserTeams(): Promise<UserTeam[]> {
+  const data = await getBusinessHttp().request<{ teams: UserTeam[] }>('/auth/teams')
+  return data.teams ?? []
+}
+
+export async function switchCurrentTeam(teamId: number): Promise<ProfileUser> {
+  return getBusinessHttp().request<ProfileUser>('/auth/current-team', {
+    method: 'PUT',
+    body: { team_id: teamId },
   })
 }
 

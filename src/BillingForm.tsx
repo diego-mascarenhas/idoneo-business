@@ -7,6 +7,7 @@ import { applyCountryDialCode, dialCodeForCountry } from './countries'
 import { ApiError } from './http'
 import { CountrySelect } from './CountrySelect'
 import { Panel } from './Panel'
+import { WizardSaveIcon } from './BusinessWizardIcons'
 import type { BillingFields } from './profileTypes'
 
 const inputClass =
@@ -140,8 +141,9 @@ function BillingFieldsForm({
         type="button"
         disabled={save.isPending}
         onClick={() => save.mutate()}
-        className="rounded-2xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+        className="inline-flex items-center gap-2 rounded-2xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
       >
+        <WizardSaveIcon className="h-4 w-4" />
         {save.isPending ? 'Guardando…' : 'Guardar facturación'}
       </button>
     </>
