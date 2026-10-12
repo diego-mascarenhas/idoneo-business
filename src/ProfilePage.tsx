@@ -8,7 +8,6 @@ import { Panel } from './Panel'
 import { fetchBilling, updatePassword, updateProfile } from './profileApi'
 import { ApiError } from './http'
 import { ProfilePhotoField } from './ProfilePhotoField'
-import { TeamAdminsCard } from './TeamAdminsCard'
 import type { ProfilePlanContext, ProfileUser } from './profileTypes'
 
 const inputClass =
@@ -26,9 +25,6 @@ export function ProfilePage({
   title = 'Mi perfil',
   headerExtra,
   planSection,
-  teamTitle,
-  teamDescription,
-  teamListQuery,
 }: {
   user: ProfileUser | null
   teamName?: string
@@ -41,9 +37,6 @@ export function ProfilePage({
   title?: string
   headerExtra?: ReactNode
   planSection?: ReactNode | ((context: ProfilePlanContext) => ReactNode)
-  teamTitle?: string
-  teamDescription?: string
-  teamListQuery?: string
 }) {
   const [name, setName] = useState(user?.name ?? '')
   const [email, setEmail] = useState(user?.email ?? '')
@@ -135,17 +128,6 @@ export function ProfilePage({
       {headerExtra}
 
       {plan}
-
-      {canManageTeam && (
-        <div className="mt-6">
-          <TeamAdminsCard
-            currentUserId={user?.id}
-            title={teamTitle}
-            description={teamDescription}
-            listQuery={teamListQuery}
-          />
-        </div>
-      )}
 
       <div className={canManageTeam ? 'mt-6 grid gap-6 lg:grid-cols-2' : 'mt-6'}>
         <Panel className="space-y-4 p-6">
