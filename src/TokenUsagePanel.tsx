@@ -1,6 +1,6 @@
-import { formatCompact } from './usageFormat'
+import { formatCompact, formatTranscriptionMinutes } from './usageFormat'
 import { InfoIcon } from './InfoIcon'
-import type { ProspectUsage, StorageUsage, TokenUsage, TokenUsageModule, WhatsAppUsage } from './usageTypes'
+import type { MailerUsage, ProspectUsage, StorageUsage, TokenUsage, TokenUsageModule, TranscriptionUsage, WhatsAppUsage } from './usageTypes'
 
 const MODULE_COLORS = ['#1f5c45', '#d4a017', '#5d8a74', '#c06c4a', '#6b8cae', '#8e6bb0']
 
@@ -66,14 +66,18 @@ function Donut({ slices, used }: { slices: DonutSlice[]; used: number }) {
 export function TokenUsagePanel({
   usage,
   whatsapp,
+  mailer,
+  transcription,
   prospect,
   storage,
   helpHref,
   messagesLabel = 'Mensajes',
-  description = 'IA, MCP de IDONEO, mensajes, prospección y almacenamiento. Se facturan aparte del plan.',
+  description = 'IA, mensajes, emails, prospección, almacenamiento y transcripción. Se facturan aparte del plan.',
 }: {
   usage?: TokenUsage
   whatsapp?: WhatsAppUsage
+  mailer?: MailerUsage | null
+  transcription?: TranscriptionUsage | null
   prospect?: ProspectUsage
   storage?: StorageUsage
   helpHref?: string
@@ -92,6 +96,7 @@ export function TokenUsagePanel({
     rate_per_million: 15,
   }
   const messagesSent = whatsapp?.messages_sent ?? 0
+  const emailsSent = mailer?.emails_sent ?? mailer?.period_emails_sent ?? 0
   const modules = slicesWithTokens(tokenUsage.by_module)
   const hasUsage = tokenUsage.total_calls > 0 || tokenUsage.total_tokens_used > 0
   const slices: DonutSlice[] = modules.map((module, index) => ({
@@ -122,12 +127,20 @@ export function TokenUsagePanel({
 
       <div className="mt-3 grid grid-cols-2 gap-2">
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-center">
-          <p className="text-[11px] text-[var(--muted)]">Llamadas</p>
+          <p className="text-[11px] text-[var(--muted)]">AI · MCP</p>
           <p className="text-sm font-semibold">{formatCompact(tokenUsage.total_calls)}</p>
+        </div>
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-center">
+          <p className="text-[11px] text-[var(--muted)]">Transcripción</p>
+          <p className="text-sm font-semibold">{formatTranscriptionMinutes(transcription)}</p>
         </div>
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-center">
           <p className="text-[11px] text-[var(--muted)]">{messagesLabel}</p>
           <p className="text-sm font-semibold">{formatCompact(messagesSent)}</p>
+        </div>
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-center">
+          <p className="text-[11px] text-[var(--muted)]">Emails</p>
+          <p className="text-sm font-semibold">{formatCompact(emailsSent)}</p>
         </div>
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-center">
           <p className="text-[11px] text-[var(--muted)]">Prospección</p>

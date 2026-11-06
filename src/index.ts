@@ -30,8 +30,10 @@ export type { ProfilePlanContext, ProfileUser, TeamAdmin, UserTeam } from './pro
 export type { AffiliateCatalog } from './affiliatesApi'
 export type { FeedbackProduct } from './feedbackApi'
 export type {
+  MailerUsage,
   ProspectUsage,
   StorageUsage,
+  TranscriptionUsage,
   TokenUsage,
   TokenUsageModule,
   UsageByModel,

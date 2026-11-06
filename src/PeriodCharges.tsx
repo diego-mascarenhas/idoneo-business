@@ -1,28 +1,34 @@
-import { formatCompact, formatCost } from './usageFormat'
+import { formatCost } from './usageFormat'
 import { InfoIcon } from './InfoIcon'
-import type { ProspectUsage, StorageUsage, TokenUsage, WhatsAppUsage } from './usageTypes'
+import type { MailerUsage, ProspectUsage, StorageUsage, TokenUsage, TranscriptionUsage, WhatsAppUsage } from './usageTypes'
 
 export function PeriodCharges({
   usage,
   whatsapp,
+  mailer,
+  transcription,
   prospect,
   storage,
   usageHref,
 }: {
   usage?: TokenUsage
   whatsapp?: WhatsAppUsage
+  mailer?: MailerUsage | null
+  transcription?: TranscriptionUsage | null
   prospect?: ProspectUsage
   storage?: StorageUsage
   usageHref?: string
 }) {
-  if (!usage && !whatsapp && !prospect && !storage) {
+  if (!usage && !whatsapp && !mailer && !transcription && !prospect && !storage) {
     return null
   }
 
-  const currency = storage?.currency || prospect?.currency || whatsapp?.currency || usage?.currency || 'EUR'
+  const currency = transcription?.currency || mailer?.currency || storage?.currency || prospect?.currency || whatsapp?.currency || usage?.currency || 'EUR'
   const dueCents =
     (usage?.amount_due_cents ?? 0) +
     (whatsapp?.amount_due_cents ?? 0) +
+    (mailer?.amount_due_cents ?? 0) +
+    (transcription?.amount_due_cents ?? 0) +
     (prospect?.amount_due_cents ?? 0) +
     (storage?.amount_due_cents ?? 0)
 
@@ -45,12 +51,7 @@ export function PeriodCharges({
         {formatCost(dueCents, currency)}
       </p>
       <p className="mt-1.5 text-[11px] text-[var(--muted)]">
-        {formatCompact(whatsapp?.messages_sent ?? whatsapp?.period_messages_sent ?? 0)} msgs ·{' '}
-        {formatCompact(usage?.total_tokens_used ?? 0)} tokens ·{' '}
-        {formatCompact(prospect?.credits_used ?? 0)} prosp. · {storage?.formatted_size || '0 B'}
-      </p>
-      <p className="mt-0.5 text-[11px] text-[var(--muted)]">
-        Mensajes, IA, prospección y almacenamiento, aparte del plan
+        IA, mensajes, emails, prospección, almacenamiento y transcripción, aparte del plan
       </p>
     </div>
   )
