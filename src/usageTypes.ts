@@ -38,6 +38,21 @@ export type StorageUsage = {
   period_end?: string | null
 }
 
+export type MailerUsage = {
+  emails_sent?: number
+  period_emails_sent?: number
+  amount_due_cents?: number
+  currency?: string
+}
+
+export type TranscriptionUsage = {
+  audio_seconds?: number
+  formatted_duration?: string
+  amount_due_cents?: number
+  our_rate?: number
+  currency?: string
+}
+
 export type WhatsAppUsage = {
   messages_sent: number
   our_amount_cents?: number
@@ -98,6 +113,20 @@ export type UsageAll = {
   saved_cents?: number
 }
 
+export type UsageChargeLine = {
+  label: string
+  count: number
+  amount_cents: number
+  at: string | null
+}
+
+export type UsageStorageLine = {
+  label: string
+  bytes: number
+  formatted_size: string
+  amount_cents: number
+}
+
 export type WhatsAppLineUsage = {
   period_days: number
   period_start: string
@@ -131,4 +160,10 @@ export type WhatsAppLineUsage = {
   }
   prospect?: ProspectUsage
   storage?: StorageUsage
+  mailer?: MailerUsage
+  transcription?: TranscriptionUsage
+  transcriptions?: UsageChargeLine[]
+  emails?: UsageChargeLine[]
+  prospects?: UsageChargeLine[]
+  storage_sources?: UsageStorageLine[]
 }

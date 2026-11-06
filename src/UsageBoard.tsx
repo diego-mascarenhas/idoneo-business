@@ -9,8 +9,8 @@ import {
   type CatalogModel,
 } from './modelCatalog'
 import { Panel } from './Panel'
-import { formatCompact, formatCost, formatTokens, formatUsagePeriod } from './usageFormat'
-import type { UsageByModel, UsageLine, UsageSource, WhatsAppLineUsage } from './usageTypes'
+import { formatCompact, formatCost, formatTokens, formatTranscriptionMinutes, formatUsagePeriod } from './usageFormat'
+import type { UsageByModel, UsageChargeLine, UsageLine, UsageSource, UsageStorageLine, WhatsAppLineUsage } from './usageTypes'
 
 const SOURCE_COLORS = ['#1f5c45', '#d4a017', '#5d8a74', '#c06c4a', '#6b8cae', '#8e6bb0']
 
@@ -45,22 +45,30 @@ export function UsageBoard({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+      <div className="grid grid-cols-3 gap-2.5">
+        <Kpi label="AI · MCP" value={formatCost(billed.amount_cents, view.currency)} delay={1} />
         <Kpi
-          label="Prospección"
-          value={formatCost(view.prospect?.amount_due_cents ?? 0, view.prospect?.currency ?? view.currency)}
-          delay={1}
-        />
-        <Kpi label="Tokens" value={formatCost(billed.amount_cents, view.currency)} delay={2} />
-        <Kpi
-          label="Almacenamiento"
-          value={formatCost(view.storage?.amount_due_cents ?? 0, view.storage?.currency ?? view.currency)}
-          delay={3}
+          label="Transcripción"
+          value={formatCost(view.transcription?.amount_due_cents ?? 0, view.transcription?.currency ?? view.currency)}
+          delay={2}
         />
         <Kpi
           label="Mensajes"
           value={formatCost(messages?.our_amount_cents ?? 0, messages?.currency ?? view.currency)}
+          delay={3}
+        />
+        <Kpi
+          label="Emails"
+          value={formatCost(view.mailer?.amount_due_cents ?? 0, view.mailer?.currency ?? view.currency)}
           delay={4}
+        />
+        <Kpi
+          label="Prospección"
+          value={formatCost(view.prospect?.amount_due_cents ?? 0, view.prospect?.currency ?? view.currency)}
+        />
+        <Kpi
+          label="Almacenamiento"
+          value={formatCost(view.storage?.amount_due_cents ?? 0, view.storage?.currency ?? view.currency)}
         />
       </div>
 
@@ -74,12 +82,12 @@ export function UsageBoard({
             Todavía no hay consumo de OCR, Insights, Chat ni otras APIs.
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
+          <div className="min-w-0">
+            <table className="w-full text-left text-sm">
               <thead className="border-y border-[var(--border)] text-[11px] uppercase tracking-wide text-[var(--muted)]">
                 <tr>
                   <th className="px-4 py-2 font-medium">Origen</th>
-                  <th className="px-4 py-2 text-center font-medium">Llamadas</th>
+                  <th className="px-4 py-2 text-center font-medium">AI</th>
                   <th className="px-4 py-2 text-right font-medium">Tokens</th>
                   <th className="px-4 py-2 text-right font-medium">Valor</th>
                 </tr>
@@ -122,8 +130,8 @@ export function UsageBoard({
             </div>
             <p className="text-xs text-[var(--muted)]">{period}</p>
           </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
+          <div className="min-w-0">
+            <table className="w-full text-left text-sm">
               <thead className="border-y border-[var(--border)] text-[11px] uppercase tracking-wide text-[var(--muted)]">
                 <tr>
                   <th className="px-4 py-2 font-medium">Modelo</th>
@@ -155,6 +163,16 @@ export function UsageBoard({
         </Panel>
       )}
 
+      <ChargeList
+        title="Transcripción"
+        empty="Todavía no hay audio transcrito."
+        quantityLabel="Duración"
+        rows={view.transcriptions ?? []}
+        currency={view.transcription?.currency ?? view.currency}
+        period={period}
+        quantity={(row) => formatTranscriptionMinutes({ audio_seconds: row.count })}
+      />
+
       <Panel className="overflow-hidden p-0 rise-in-delay-2">
         <div className="flex items-baseline justify-between gap-3 px-4 py-3">
           <div>
@@ -170,8 +188,8 @@ export function UsageBoard({
             Todavía no hay consumo de tokens en mensajes.
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
+          <div className="min-w-0">
+            <table className="w-full text-left text-sm">
               <thead className="border-y border-[var(--border)] text-[11px] uppercase tracking-wide text-[var(--muted)]">
                 <tr>
                   <th className="px-4 py-2 font-medium">Contacto</th>
@@ -192,7 +210,127 @@ export function UsageBoard({
           </div>
         )}
       </Panel>
+
+      <ChargeList
+        title="Emails"
+        empty="Todavía no hay emails en este período."
+        quantityLabel="Envíos"
+        rows={view.emails ?? []}
+        currency={view.mailer?.currency ?? view.currency}
+        period={period}
+        quantity={(row) => formatTokens(row.count)}
+      />
+      <ChargeList
+        title="Prospección"
+        empty="Todavía no hay créditos de prospección en este período."
+        quantityLabel="Créditos"
+        rows={view.prospects ?? []}
+        currency={view.prospect?.currency ?? view.currency}
+        period={period}
+        quantity={(row) => formatTokens(row.count)}
+      />
+      <StorageList
+        rows={view.storage_sources ?? []}
+        currency={view.storage?.currency ?? view.currency}
+        period={period}
+      />
     </div>
+  )
+}
+
+function ChargeList({
+  title,
+  empty,
+  quantityLabel,
+  rows,
+  currency,
+  period,
+  quantity,
+}: {
+  title: string
+  empty: string
+  quantityLabel: string
+  rows: UsageChargeLine[]
+  currency: string
+  period: string
+  quantity: (row: UsageChargeLine) => string
+}) {
+  return (
+    <Panel className="overflow-hidden p-0">
+      <div className="flex items-baseline justify-between gap-3 px-4 py-3">
+        <h2 className="font-display text-base font-semibold">{title}</h2>
+        <p className="text-xs text-[var(--muted)]">{period}</p>
+      </div>
+      {rows.length === 0 ? (
+        <p className="px-4 pb-4 text-sm text-[var(--muted)]">{empty}</p>
+      ) : (
+        <div className="min-w-0">
+          <table className="w-full text-left text-sm">
+            <thead className="border-y border-[var(--border)] text-[11px] uppercase tracking-wide text-[var(--muted)]">
+              <tr>
+                <th className="px-4 py-2 font-medium">Origen</th>
+                <th className="px-4 py-2 text-right font-medium">{quantityLabel}</th>
+                <th className="px-4 py-2 text-right font-medium">Valor</th>
+                <th className="px-4 py-2 text-right font-medium">Última</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={`${row.label}-${row.at ?? ''}`} className="border-b border-[var(--border)] last:border-b-0">
+                  <td className="px-4 py-2.5 font-medium break-words">{row.label}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums">{quantity(row)}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums">{formatCost(row.amount_cents, currency)}</td>
+                  <td className="px-4 py-2.5 text-right text-xs text-[var(--muted)]">{formatWhen(row.at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Panel>
+  )
+}
+
+function StorageList({
+  rows,
+  currency,
+  period,
+}: {
+  rows: UsageStorageLine[]
+  currency: string
+  period: string
+}) {
+  return (
+    <Panel className="overflow-hidden p-0">
+      <div className="flex items-baseline justify-between gap-3 px-4 py-3">
+        <h2 className="font-display text-base font-semibold">Almacenamiento</h2>
+        <p className="text-xs text-[var(--muted)]">{period}</p>
+      </div>
+      {rows.length === 0 ? (
+        <p className="px-4 pb-4 text-sm text-[var(--muted)]">Todavía no hay archivos almacenados.</p>
+      ) : (
+        <div className="min-w-0">
+          <table className="w-full text-left text-sm">
+            <thead className="border-y border-[var(--border)] text-[11px] uppercase tracking-wide text-[var(--muted)]">
+              <tr>
+                <th className="px-4 py-2 font-medium">Origen</th>
+                <th className="px-4 py-2 text-right font-medium">Tamaño</th>
+                <th className="px-4 py-2 text-right font-medium">Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.label} className="border-b border-[var(--border)] last:border-b-0">
+                  <td className="px-4 py-2.5 font-medium">{row.label}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums">{row.formatted_size}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums">{formatCost(row.amount_cents, currency)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Panel>
   )
 }
 
@@ -212,7 +350,7 @@ function Kpi({
   return (
     <div className={`widget-solid rise-in px-4 py-3 ${delayClass}`}>
       <p className="truncate text-[11px] font-medium leading-none text-[var(--muted)]">{label}</p>
-      <p className="mt-1.5 font-display text-[1.45rem] font-semibold tabular-nums leading-none">
+      <p className="mt-1.5 text-right font-display text-[1.45rem] font-semibold tabular-nums leading-none">
         {value}
         {hint ? (
           <span className="ml-1.5 align-baseline text-sm font-medium text-[var(--muted)]">

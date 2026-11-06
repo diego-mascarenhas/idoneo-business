@@ -14,6 +14,48 @@ export function formatCompact(value: number): string {
   return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
 }
 
+export function formatTranscriptionMinutes(transcription?: {
+  audio_seconds?: number
+  formatted_duration?: string
+} | null): string {
+  const minutes = Math.round((transcriptionSeconds(transcription) / 60) * 10) / 10
+  const text = new Intl.NumberFormat('es-ES', {
+    minimumFractionDigits: Number.isInteger(minutes) ? 0 : 1,
+    maximumFractionDigits: 1,
+  }).format(minutes)
+
+  return `${text} min`
+}
+
+function transcriptionSeconds(transcription?: {
+  audio_seconds?: number
+  formatted_duration?: string
+} | null): number {
+  if (typeof transcription?.audio_seconds === 'number' && Number.isFinite(transcription.audio_seconds)) {
+    return Math.max(0, transcription.audio_seconds)
+  }
+
+  const match = (transcription?.formatted_duration ?? '').match(/([\d.,]+)\s*(s|min|h)/i)
+  if (!match) {
+    return 0
+  }
+
+  const value = Number(match[1].replace(',', '.'))
+  if (!Number.isFinite(value)) {
+    return 0
+  }
+
+  const unit = match[2].toLowerCase()
+  if (unit === 'min') {
+    return value * 60
+  }
+  if (unit === 'h') {
+    return value * 3600
+  }
+
+  return value
+}
+
 export function formatCost(cents: number, currency: string): string {
   try {
     return new Intl.NumberFormat('es-ES', {

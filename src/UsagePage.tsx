@@ -22,8 +22,7 @@ export function UsagePage({ teamId }: { teamId?: number | string | null }) {
       <div className="mb-5">
         <h1 className="font-display text-2xl font-semibold leading-none">Consumo</h1>
         <p className="mt-1.5 text-sm text-[var(--muted)]">
-          Consumo del período: tokens, mensajes, prospección y almacenamiento, más el detalle por
-          contacto.
+          Consumo del período: AI, transcripción, mensajes, emails, prospección y almacenamiento.
         </p>
       </div>
 
