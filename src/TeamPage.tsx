@@ -72,7 +72,7 @@ export function TeamPage({
               Elegí el equipo con el que querés trabajar. El resto de la app pasa a ese equipo.
             </p>
           </div>
-          <ul className="space-y-2">
+          <ul className="list-none space-y-2 p-0">
             {teams.map((team) => {
               const pending = switchingId === team.id
 
