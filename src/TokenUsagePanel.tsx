@@ -152,9 +152,9 @@ export function TokenUsagePanel({
         </div>
       </div>
 
-      {hasUsage && slices.length > 0 ? (
-        <div className="mt-4 space-y-3">
-          <Donut slices={slices} used={tokenUsage.total_tokens_used} />
+      <div className="mt-4 space-y-3">
+        <Donut slices={slices} used={tokenUsage.total_tokens_used} />
+        {hasUsage && slices.length > 0 ? (
           <ul className="flex flex-wrap justify-center gap-x-3 gap-y-1">
             {slices.map((slice) => (
               <li key={slice.key} className="flex items-center gap-1.5 text-xs text-[var(--muted)]">
@@ -166,19 +166,19 @@ export function TokenUsagePanel({
               </li>
             ))}
           </ul>
-        </div>
-      ) : (
-        <p className="mt-3 text-xs text-[var(--muted)]">Todavía no hay consumo de tokens.</p>
-      )}
+        ) : (
+          <p className="text-center text-xs text-[var(--muted)]">Todavía no hay consumo de tokens.</p>
+        )}
+      </div>
 
-      <div className="mt-4 border-t border-[var(--border)] pt-[2.5px]">
-        <div className="h-1 overflow-hidden rounded-full bg-[var(--chip)]">
+      <div className="mt-4 border-t border-[var(--border)] pt-3">
+        <div className="h-1.5 overflow-hidden rounded-full bg-[var(--chip)]">
           <div
             className="h-full rounded-full bg-[var(--success)]"
             style={{ width: `${Math.min(100, Math.max(0, tokenUsage.average_savings))}%` }}
           />
         </div>
-        <div className="mt-[1px] flex justify-between gap-2 text-[11px] leading-none text-[var(--muted)]">
+        <div className="mt-2 flex justify-between gap-2 text-[11px] leading-none text-[var(--muted)]">
           <span>Usados: {formatCompact(tokenUsage.total_tokens_used)}</span>
           <span>
             Ahorrados: {formatCompact(tokenUsage.total_tokens_saved)} (
