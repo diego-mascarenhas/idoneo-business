@@ -12,7 +12,9 @@ export function presentClientUsage(
   catalog: CatalogModel[],
 ): WhatsAppLineUsage {
   if (data.client_presented) {
-    return withAlignedSources(data)
+    // Server already matched invoice billing (TeamApiUsageStatsService).
+    // Do not reprice Chat/OCR/Whisper from by_model metadata.
+    return data
   }
 
   const multiplier = data.token_multiplier ?? DEFAULT_CLIENT_TOKEN_MULTIPLIER
@@ -68,6 +70,13 @@ export function presentClientUsage(
 }
 
 export function billedUsageTotals(data: WhatsAppLineUsage): { tokens: number; amount_cents: number } {
+  if (data.client_presented) {
+    return {
+      tokens: data.all?.tokens ?? data.totals.total_tokens,
+      amount_cents: data.all?.amount_cents ?? data.totals.amount_cents,
+    }
+  }
+
   const sources = alignSourcesWithModels(data.sources ?? [], data.by_model)
   if (sources.length > 0) {
     return {
