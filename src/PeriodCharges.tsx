@@ -1,6 +1,9 @@
-import { formatCost } from './usageFormat'
+import { formatCost, formatUsagePeriodSince } from './usageFormat'
 import { InfoIcon } from './InfoIcon'
 import type { MailerUsage, ProspectUsage, StorageUsage, TokenUsage, TranscriptionUsage, WhatsAppUsage } from './usageTypes'
+
+const USAGE_CAPTION =
+  'Consumos de IA, mensajes, emails, prospección, almacenamiento y transcripción'
 
 export function PeriodCharges({
   usage,
@@ -31,6 +34,9 @@ export function PeriodCharges({
     (transcription?.amount_due_cents ?? 0) +
     (prospect?.amount_due_cents ?? 0) +
     (storage?.amount_due_cents ?? 0)
+  const since = formatUsagePeriodSince(
+    usage?.period_start ?? whatsapp?.period_start ?? mailer?.period_start ?? transcription?.period_start ?? prospect?.period_start ?? storage?.period_start,
+  )
 
   return (
     <div className="rounded-2xl bg-[var(--accent-soft)] px-3 py-2.5">
@@ -51,7 +57,7 @@ export function PeriodCharges({
         {formatCost(dueCents, currency)}
       </p>
       <p className="mt-1.5 text-[11px] text-[var(--muted)]">
-        IA, mensajes, emails, prospección, almacenamiento y transcripción, aparte del plan
+        {since ? `${USAGE_CAPTION} desde el ${since}.` : `${USAGE_CAPTION}, aparte del plan.`}
       </p>
     </div>
   )
