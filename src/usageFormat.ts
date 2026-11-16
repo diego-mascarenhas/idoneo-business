@@ -104,3 +104,23 @@ export function formatUsagePeriod(start?: string | null, end?: string | null): s
 
   return `${startLabel} – ${endLabel}`
 }
+
+/** Long Spanish start date for copy like “desde el 24 de octubre”. */
+export function formatUsagePeriodSince(start?: string | null, now: Date = new Date()): string | null {
+  if (!start) {
+    return null
+  }
+
+  const from = new Date(start)
+  if (Number.isNaN(from.getTime())) {
+    return null
+  }
+
+  const sameYear = from.getFullYear() === now.getFullYear()
+
+  return from.toLocaleDateString('es-ES', {
+    day: 'numeric',
+    month: 'long',
+    ...(sameYear ? {} : { year: 'numeric' }),
+  })
+}

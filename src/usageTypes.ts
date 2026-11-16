@@ -43,6 +43,8 @@ export type MailerUsage = {
   period_emails_sent?: number
   amount_due_cents?: number
   currency?: string
+  period_start?: string | null
+  period_end?: string | null
 }
 
 export type TranscriptionUsage = {
@@ -51,6 +53,8 @@ export type TranscriptionUsage = {
   amount_due_cents?: number
   our_rate?: number
   currency?: string
+  period_start?: string | null
+  period_end?: string | null
 }
 
 export type WhatsAppUsage = {

@@ -24,6 +24,7 @@ export {
   uploadBusinessAsset,
 } from './api'
 export { fetchWhatsAppLineUsage } from './usageApi'
+export { formatUsagePeriod, formatUsagePeriodSince } from './usageFormat'
 export { ApiError, configureBusinessHttp, createBusinessHttp } from './http'
 export type { BusinessAsset, BusinessProfile, BusinessProfileUpdate } from './types'
 export type { ProfilePlanContext, ProfileUser, TeamAdmin, UserTeam } from './profileTypes'
