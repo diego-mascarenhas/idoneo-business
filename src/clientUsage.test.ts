@@ -95,7 +95,7 @@ describe('client usage presentation', () => {
     assert.equal(view.all?.tokens, 100_000)
   })
 
-  it('bills the headline from catalog models, not the cheaper log estimate', () => {
+  it('trusts the invoice-aligned server headline when client_presented', () => {
     const view = presentClientUsage(
       {
         ...usageFixture(),
@@ -111,14 +111,16 @@ describe('client usage presentation', () => {
       [haiku],
     )
 
-    assert.deepEqual(billedUsageTotals(view), { tokens: 548_508, amount_cents: 56 })
+    assert.deepEqual(billedUsageTotals(view), { tokens: 45_300, amount_cents: 5 })
+    assert.equal(view.sources?.[0]?.tokens_used, 45_300)
   })
 
-  it('adds log-only sources that models do not already cover', () => {
+  it('keeps log-only sources as the API sent them when client_presented', () => {
     const view = presentClientUsage(
       {
         ...usageFixture(),
         client_presented: true,
+        all: { calls: 3, tokens: 55_300, amount_cents: 17 },
         sources: [
           { module_name: 'Chat', count: 1, tokens_used: 45_300, amount_cents: 5 },
           { module_name: 'Insights', count: 2, tokens_used: 10_000, amount_cents: 12 },
@@ -128,38 +130,7 @@ describe('client usage presentation', () => {
       [haiku],
     )
 
-    assert.deepEqual(billedUsageTotals(view), { tokens: 548_800, amount_cents: 68 })
-  })
-
-  it('replaces cheap Chat/OCR logs so origin rows add up to the headline', () => {
-    const view = presentClientUsage(
-      {
-        ...usageFixture(),
-        client_presented: true,
-        all: { calls: 3, tokens: 33_200_000, amount_cents: 3002 },
-        sources: [
-          { module_name: 'Chat', count: 111, tokens_used: 19_300_000, amount_cents: 1694 },
-          { module_name: 'OCR', count: 930, tokens_used: 13_900_000, amount_cents: 1223 },
-          { module_name: 'Insights', count: 902, tokens_used: 6_100_000, amount_cents: 534 },
-        ],
-        by_model: [
-          { model: 'claude-haiku-4-5-20251001', replies: 111, total_tokens: 26_600_000, amount_cents: 2398 },
-          { model: 'openai/gpt-4o-mini', replies: 0, total_tokens: 356_500, amount_cents: 5 },
-          { model: 'whisper-1', replies: 0, total_tokens: 123_600, amount_cents: 65 },
-        ],
-      },
-      [haiku],
-    )
-
-    const originTokens = (view.sources ?? []).reduce((sum, source) => sum + source.tokens_used, 0)
-    const originAmount = (view.sources ?? []).reduce((sum, source) => sum + source.amount_cents, 0)
-
-    assert.equal(view.sources?.find((source) => source.module_name === 'Chat')?.tokens_used, 26_600_000)
-    assert.equal(view.sources?.find((source) => source.module_name === 'OCR')?.tokens_used, 356_500)
-    assert.equal(view.sources?.find((source) => source.module_name === 'Whisper')?.tokens_used, 123_600)
-    assert.deepEqual(billedUsageTotals(view), { tokens: 33_180_100, amount_cents: 3002 })
-    assert.equal(originTokens, view.all?.tokens)
-    assert.equal(originAmount, view.all?.amount_cents)
-    assert.equal(originTokens, billedUsageTotals(view).tokens)
+    assert.deepEqual(billedUsageTotals(view), { tokens: 55_300, amount_cents: 17 })
+    assert.equal(view.sources?.find((source) => source.module_name === 'Insights')?.amount_cents, 12)
   })
 })
