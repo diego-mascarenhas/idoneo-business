@@ -13,6 +13,8 @@ export { TeamAdminsCard } from './TeamAdminsCard'
 export { TeamPage } from './TeamPage'
 export { TrialBanner, remainingTrialLabel } from './TrialBanner'
 export type { TrialAccess } from './TrialBanner'
+export { CardExpiryBanner } from './CardExpiryBanner'
+export type { DefaultPaymentMethodStatus } from './CardExpiryBanner'
 export { WizardArrowLeftIcon } from './BusinessWizardIcons'
 export {
   deleteBusinessAsset,
