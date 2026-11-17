@@ -40,10 +40,14 @@ export function CardExpiryBanner({
   paymentMethod,
   href = '/profile',
   action = 'Actualizar tarjeta',
+  onAction,
+  pending = false,
 }: {
   paymentMethod?: DefaultPaymentMethodStatus | null
   href?: string
   action?: string
+  onAction?: () => void
+  pending?: boolean
 }) {
   if (!paymentMethod?.expired && !paymentMethod?.expiring_soon) {
     return null
@@ -59,15 +63,28 @@ export function CardExpiryBanner({
     ? `${card} está vencida.`
     : `${card} ${daysLeftLabel(paymentMethod.days_until_expiry)}.`
 
-  return (
-    <a
-      href={href}
-      className={`inline-flex w-max max-w-full items-center gap-2 overflow-hidden rounded-full border px-3 py-1.5 text-left text-xs font-medium leading-snug no-underline transition hover:bg-[var(--chip)] sm:text-sm ${colors}`}
-    >
+  const className = `inline-flex w-max max-w-full items-center gap-2 overflow-hidden rounded-full border px-3 py-1.5 text-left text-xs font-medium leading-snug no-underline transition hover:bg-[var(--chip)] sm:text-sm disabled:opacity-60 ${colors}`
+  const label = (
+    <>
       <AlertIcon />
       <span className="min-w-0 truncate">
-        {message} <span className="underline underline-offset-2">{action}</span>
+        {message}{' '}
+        <span className="underline underline-offset-2">{pending ? 'Abriendo Stripe…' : action}</span>
       </span>
+    </>
+  )
+
+  if (onAction) {
+    return (
+      <button type="button" className={className} onClick={onAction} disabled={pending}>
+        {label}
+      </button>
+    )
+  }
+
+  return (
+    <a href={href} className={className}>
+      {label}
     </a>
   )
 }
